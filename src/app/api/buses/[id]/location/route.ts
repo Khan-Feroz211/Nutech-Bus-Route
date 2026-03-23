@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { mockBuses } from '@/lib/db';
 import type { ApiResponse, LatLng } from '@/types';
 
-// In-memory location store
+// In-memory location store (demo only – lost on restart; use a real DB in production)
 const locationStore = new Map<string, { location: LatLng; speed?: number; heading?: number; timestamp: number }>();
 
 export async function GET(

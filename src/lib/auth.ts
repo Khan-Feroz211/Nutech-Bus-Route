@@ -101,5 +101,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
     maxAge: 24 * 60 * 60,
   },
-  secret: process.env.NEXTAUTH_SECRET ?? 'nutech-bustrack-secret-key-change-in-production',
+  secret: process.env.NEXTAUTH_SECRET ?? 'nutech-bustrack-dev-secret-replace-before-deploying',
 });
