@@ -7,14 +7,15 @@ const locationStore = new Map<string, { location: LatLng; speed?: number; headin
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const bus = mockBuses.find((b) => b.id === params.id);
+  const { id } = await params;
+  const bus = mockBuses.find((b) => b.id === id);
   if (!bus) {
     return NextResponse.json<ApiResponse>({ success: false, error: 'Bus not found' }, { status: 404 });
   }
 
-  const stored = locationStore.get(params.id);
+  const stored = locationStore.get(id);
   const location = stored ?? {
     location: bus.currentLocation ?? { lat: 33.6502, lng: 73.1201 },
     speed: bus.speed,
@@ -27,11 +28,12 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
+    const { id } = await params;
     const body = await req.json() as { location: LatLng; speed?: number; heading?: number };
-    locationStore.set(params.id, { ...body, timestamp: Date.now() });
+    locationStore.set(id, { ...body, timestamp: Date.now() });
 
     return NextResponse.json<ApiResponse>({ success: true, message: 'Location updated.' });
   } catch {
