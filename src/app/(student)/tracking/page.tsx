@@ -94,8 +94,9 @@ export default function TrackingPage() {
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Stops</p>
           <div className="space-y-1">
             {route.stops.map((stop, i) => {
+              const MINUTES_PER_STOP = 3;
               const stopEta = etaMinutes !== null
-                ? Math.max(0, etaMinutes - (route.stops.length - 1 - i) * 3)
+                ? Math.max(0, etaMinutes - (route.stops.length - 1 - i) * MINUTES_PER_STOP)
                 : null;
 
               return (

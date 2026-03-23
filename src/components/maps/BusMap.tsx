@@ -12,17 +12,16 @@ interface BusMapProps {
 
 declare global {
   interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    google: any;
+    google: typeof google;
     initBusMap?: () => void;
   }
 }
 
 export default function BusMap({ busLocation, route, heading = 0, height = '400px' }: BusMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const busMarkerRef = useRef<any>(null);
-  const polylineRef = useRef<any>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const busMarkerRef = useRef<google.maps.Marker | null>(null);
+  const polylineRef = useRef<google.maps.Polyline | null>(null);
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [apiError, setApiError] = useState(false);
 

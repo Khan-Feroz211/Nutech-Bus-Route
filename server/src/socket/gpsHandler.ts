@@ -3,7 +3,14 @@ import type { GPSUpdatePayload, TripEventPayload } from '../types';
 
 // In-memory bus location store
 const busLocations = new Map<string, GPSUpdatePayload>();
+// Simulation intervals keyed by busId; cleared when a trip ends or the process exits
 const simulationIntervals = new Map<string, ReturnType<typeof setInterval>>();
+
+// Clean up all simulation intervals on process exit to prevent leaks
+process.on('exit', () => {
+  simulationIntervals.forEach((interval) => clearInterval(interval));
+  simulationIntervals.clear();
+});
 
 // Predefined waypoints for simulation (Route A as example)
 const routeWaypoints: Record<string, Array<{ lat: number; lng: number }>> = {

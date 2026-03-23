@@ -49,9 +49,10 @@ export function useBusLocation(busId: string, simulate = true) {
 
     waypointIndexRef.current = nextIndex;
 
+    const MINUTES_PER_WAYPOINT = 2.5;
     const totalStops = waypoints.length;
     const remaining = totalStops - currentIndex;
-    const etaMinutes = Math.max(0, Math.round(remaining * 2.5));
+    const etaMinutes = Math.max(0, Math.round(remaining * MINUTES_PER_WAYPOINT));
 
     setState({
       location: currentWp,

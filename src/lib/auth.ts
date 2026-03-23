@@ -101,5 +101,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
     maxAge: 24 * 60 * 60,
   },
-  secret: process.env.NEXTAUTH_SECRET ?? 'nutech-bustrack-dev-secret-replace-before-deploying',
+  secret: (() => {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      // In production at *runtime* (not build), a missing secret is a misconfiguration.
+      // The fallback below is safe only for local development.
+      if (process.env.NEXTAUTH_SECRET_REQUIRED === 'true') {
+        throw new Error('NEXTAUTH_SECRET environment variable must be set in production');
+      }
+      return 'nutech-bustrack-dev-secret-replace-before-deploying';
+    }
+    return secret;
+  })(),
 });
