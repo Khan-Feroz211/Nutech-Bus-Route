@@ -1,27 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockNotifications } from '@/lib/db';
-import type { ApiResponse, Notification } from '@/types';
-
-const notifications = [...mockNotifications];
+import { prisma } from '@/lib/prisma';
+import type { ApiResponse } from '@/types';
 
 export async function GET(): Promise<NextResponse> {
-  return NextResponse.json<ApiResponse>({ success: true, data: notifications });
+  try {
+    const dbs = await prisma.notification.findMany({ orderBy: { createdAt: 'desc' } });
+    return NextResponse.json<ApiResponse>({ success: true, data: dbs });
+  } catch {
+    return NextResponse.json<ApiResponse>({ success: false, error: 'DB error' }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const body = await req.json() as Omit<Notification, 'id' | 'createdAt' | 'read'>;
+    const body = await req.json() as { title: string; message: string; type: string; targetRole?: string; routeId?: string };
 
-    const newNotif: Notification = {
-      ...body,
-      id: `notif-${Date.now()}`,
-      createdAt: new Date(),
-      read: false,
-    };
-    notifications.unshift(newNotif);
+    const newNotif = await prisma.notification.create({
+      data: {
+        title: body.title,
+        message: body.message,
+        type: body.type,
+        targetRole: body.targetRole ?? null,
+        routeId: body.routeId ?? null,
+        read: false,
+      },
+    });
 
     return NextResponse.json<ApiResponse>({ success: true, data: newNotif }, { status: 201 });
   } catch {
     return NextResponse.json<ApiResponse>({ success: false, error: 'Invalid request.' }, { status: 400 });
   }
 }
+

@@ -1,16 +1,27 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Card } from '@/components/ui/Card';
 import BusTable from '@/components/admin/BusTable';
-import { mockBuses, mockRoutes, mockDrivers } from '@/lib/db';
-import { getBusStatusLabel } from '@/lib/utils';
+import { mockRoutes, mockDrivers } from '@/lib/db';
+import type { Bus } from '@/types';
 
 const FleetMap = dynamic(() => import('@/components/maps/FleetMap'), { ssr: false });
 
 export default function AdminDashboard() {
-  const activeBuses = mockBuses.filter((b) => b.status === 'active').length;
-  const idleBuses = mockBuses.filter((b) => b.status === 'idle').length;
+  const [buses, setBuses] = useState<Bus[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/buses')
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setBuses(d.data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const activeBuses = buses.filter((b) => b.status === 'active').length;
+  const idleBuses = buses.filter((b) => b.status === 'idle').length;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-4 space-y-4">
@@ -21,7 +32,7 @@ export default function AdminDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total Buses" value={mockBuses.length.toString()} icon="🚌" color="blue" />
+        <StatCard label="Total Buses" value={buses.length.toString()} icon="🚌" color="blue" />
         <StatCard label="Active" value={activeBuses.toString()} icon="✅" color="green" />
         <StatCard label="Idle" value={idleBuses.toString()} icon="⏸️" color="yellow" />
         <StatCard label="Routes" value={mockRoutes.length.toString()} icon="🗺️" color="purple" />
@@ -32,13 +43,17 @@ export default function AdminDashboard() {
         <div className="px-4 pt-4 pb-2 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">Live Fleet Map</h2>
         </div>
-        <FleetMap buses={mockBuses} routes={mockRoutes} height="450px" />
+        <FleetMap buses={buses} routes={mockRoutes} height="450px" />
       </Card>
 
       {/* Bus table */}
       <Card>
         <h2 className="font-semibold text-gray-900 mb-4">Bus Status</h2>
-        <BusTable buses={mockBuses} routes={mockRoutes} drivers={mockDrivers} />
+        {loading ? (
+          <div className="text-center py-8 text-gray-400">Loading…</div>
+        ) : (
+          <BusTable buses={buses} routes={mockRoutes} drivers={mockDrivers} />
+        )}
       </Card>
     </div>
   );
@@ -72,3 +87,4 @@ function StatCard({
     </div>
   );
 }
+

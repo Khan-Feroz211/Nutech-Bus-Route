@@ -1,3 +1,11 @@
+/**
+ * lib/db.ts — database helpers built on Prisma.
+ *
+ * The mock arrays are kept as a legacy fallback (used only in client-side
+ * components that import from here for initial render).  All mutations and
+ * server-side reads should go through the API routes which use `prisma`.
+ */
+
 import type {
   BusRoute,
   Bus,
@@ -29,15 +37,9 @@ export const mockRoutes: BusRoute[] = [
       { id: 'ra-6', name: 'NUTECH Campus', location: { lat: 33.6502, lng: 73.1201 }, order: 6, morningArrival: '8:25 AM', eveningArrival: '5:00 PM' },
     ],
     waypoints: [
-      { lat: 33.5986, lng: 73.0478 },
-      { lat: 33.6020, lng: 73.0510 },
-      { lat: 33.6060, lng: 73.0566 },
-      { lat: 33.6150, lng: 73.0620 },
-      { lat: 33.6232, lng: 73.0682 },
-      { lat: 33.6290, lng: 73.0780 },
-      { lat: 33.6340, lng: 73.0890 },
-      { lat: 33.6410, lng: 73.1010 },
-      { lat: 33.6480, lng: 73.1150 },
+      { lat: 33.5986, lng: 73.0478 }, { lat: 33.6020, lng: 73.0510 }, { lat: 33.6060, lng: 73.0566 },
+      { lat: 33.6150, lng: 73.0620 }, { lat: 33.6232, lng: 73.0682 }, { lat: 33.6290, lng: 73.0780 },
+      { lat: 33.6340, lng: 73.0890 }, { lat: 33.6410, lng: 73.1010 }, { lat: 33.6480, lng: 73.1150 },
       { lat: 33.6502, lng: 73.1201 },
     ],
   },
@@ -59,15 +61,9 @@ export const mockRoutes: BusRoute[] = [
       { id: 'rb-5', name: 'NUTECH Campus', location: { lat: 33.6502, lng: 73.1201 }, order: 5, morningArrival: '8:25 AM', eveningArrival: '5:00 PM' },
     ],
     waypoints: [
-      { lat: 33.6847, lng: 73.0051 },
-      { lat: 33.6820, lng: 73.0130 },
-      { lat: 33.6800, lng: 73.0200 },
-      { lat: 33.6760, lng: 73.0320 },
-      { lat: 33.6700, lng: 73.0450 },
-      { lat: 33.6640, lng: 73.0630 },
-      { lat: 33.6580, lng: 73.0820 },
-      { lat: 33.6540, lng: 73.1010 },
-      { lat: 33.6502, lng: 73.1201 },
+      { lat: 33.6847, lng: 73.0051 }, { lat: 33.6820, lng: 73.0130 }, { lat: 33.6800, lng: 73.0200 },
+      { lat: 33.6760, lng: 73.0320 }, { lat: 33.6700, lng: 73.0450 }, { lat: 33.6640, lng: 73.0630 },
+      { lat: 33.6580, lng: 73.0820 }, { lat: 33.6540, lng: 73.1010 }, { lat: 33.6502, lng: 73.1201 },
     ],
   },
   {
@@ -88,15 +84,9 @@ export const mockRoutes: BusRoute[] = [
       { id: 'rc-5', name: 'NUTECH Campus', location: { lat: 33.6502, lng: 73.1201 }, order: 5, morningArrival: '8:20 AM', eveningArrival: '5:00 PM' },
     ],
     waypoints: [
-      { lat: 33.5231, lng: 73.1234 },
-      { lat: 33.5320, lng: 73.1210 },
-      { lat: 33.5410, lng: 73.1180 },
-      { lat: 33.5510, lng: 73.1150 },
-      { lat: 33.5600, lng: 73.1100 },
-      { lat: 33.5720, lng: 73.1130 },
-      { lat: 33.5900, lng: 73.1150 },
-      { lat: 33.6200, lng: 73.1170 },
-      { lat: 33.6502, lng: 73.1201 },
+      { lat: 33.5231, lng: 73.1234 }, { lat: 33.5320, lng: 73.1210 }, { lat: 33.5410, lng: 73.1180 },
+      { lat: 33.5510, lng: 73.1150 }, { lat: 33.5600, lng: 73.1100 }, { lat: 33.5720, lng: 73.1130 },
+      { lat: 33.5900, lng: 73.1150 }, { lat: 33.6200, lng: 73.1170 }, { lat: 33.6502, lng: 73.1201 },
     ],
   },
   {
@@ -117,15 +107,9 @@ export const mockRoutes: BusRoute[] = [
       { id: 'rd-5', name: 'NUTECH Campus', location: { lat: 33.6502, lng: 73.1201 }, order: 5, morningArrival: '8:20 AM', eveningArrival: '5:00 PM' },
     ],
     waypoints: [
-      { lat: 33.7010, lng: 73.0190 },
-      { lat: 33.7060, lng: 73.0150 },
-      { lat: 33.7100, lng: 73.0100 },
-      { lat: 33.7010, lng: 73.0220 },
-      { lat: 33.6920, lng: 73.0340 },
-      { lat: 33.6860, lng: 73.0420 },
-      { lat: 33.6800, lng: 73.0500 },
-      { lat: 33.6680, lng: 73.0820 },
-      { lat: 33.6502, lng: 73.1201 },
+      { lat: 33.7010, lng: 73.0190 }, { lat: 33.7060, lng: 73.0150 }, { lat: 33.7100, lng: 73.0100 },
+      { lat: 33.7010, lng: 73.0220 }, { lat: 33.6920, lng: 73.0340 }, { lat: 33.6860, lng: 73.0420 },
+      { lat: 33.6800, lng: 73.0500 }, { lat: 33.6680, lng: 73.0820 }, { lat: 33.6502, lng: 73.1201 },
     ],
   },
 ];
@@ -133,122 +117,28 @@ export const mockRoutes: BusRoute[] = [
 // ─── Buses ───────────────────────────────────────────────────────────────────
 
 export const mockBuses: Bus[] = [
-  {
-    id: 'bus-001',
-    plateNumber: 'ISB-001',
-    routeId: 'route-a',
-    driverId: 'drv-001',
-    capacity: 45,
-    model: 'Hino Coach 2022',
-    status: 'active',
-    currentLocation: { lat: 33.6232, lng: 73.0682 },
-    heading: 45,
-    speed: 35,
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'bus-002',
-    plateNumber: 'ISB-002',
-    routeId: 'route-b',
-    driverId: 'drv-002',
-    capacity: 40,
-    model: 'Yutong 2021',
-    status: 'active',
-    currentLocation: { lat: 33.6700, lng: 73.0450 },
-    heading: 120,
-    speed: 28,
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'bus-003',
-    plateNumber: 'ISB-003',
-    routeId: 'route-c',
-    driverId: 'drv-003',
-    capacity: 45,
-    model: 'Hino Coach 2023',
-    status: 'idle',
-    currentLocation: { lat: 33.5600, lng: 73.1100 },
-    heading: 0,
-    speed: 0,
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'bus-004',
-    plateNumber: 'ISB-004',
-    routeId: 'route-d',
-    driverId: 'drv-004',
-    capacity: 40,
-    model: 'King Long 2022',
-    status: 'active',
-    currentLocation: { lat: 33.6920, lng: 73.0340 },
-    heading: 200,
-    speed: 32,
-    lastUpdated: new Date(),
-  },
+  { id: 'bus-001', plateNumber: 'ISB-001', routeId: 'route-a', driverId: 'drv-001', capacity: 45, model: 'Hino Coach 2022', status: 'active', currentLocation: { lat: 33.6232, lng: 73.0682 }, heading: 45, speed: 35, lastUpdated: new Date() },
+  { id: 'bus-002', plateNumber: 'ISB-002', routeId: 'route-b', driverId: 'drv-002', capacity: 40, model: 'Yutong 2021',     status: 'active', currentLocation: { lat: 33.6700, lng: 73.0450 }, heading: 120, speed: 28, lastUpdated: new Date() },
+  { id: 'bus-003', plateNumber: 'ISB-003', routeId: 'route-c', driverId: 'drv-003', capacity: 45, model: 'Hino Coach 2023', status: 'idle',   currentLocation: { lat: 33.5600, lng: 73.1100 }, heading: 0, speed: 0, lastUpdated: new Date() },
+  { id: 'bus-004', plateNumber: 'ISB-004', routeId: 'route-d', driverId: 'drv-004', capacity: 40, model: 'King Long 2022',  status: 'active', currentLocation: { lat: 33.6920, lng: 73.0340 }, heading: 200, speed: 32, lastUpdated: new Date() },
 ];
 
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 export const mockStudents: StudentUser[] = [
-  {
-    id: 'stu-001',
-    name: 'Ali Hassan',
-    role: 'student',
-    rollNumber: 'NUTECH-2023-001',
-    assignedRouteId: 'route-a',
-    email: 'ali@nutech.edu.pk',
-    phoneNumber: '+92-300-1234567',
-    address: 'Rawalpindi Saddar',
-  },
-  {
-    id: 'stu-002',
-    name: 'Fatima Khan',
-    role: 'student',
-    rollNumber: 'NUTECH-2023-002',
-    assignedRouteId: 'route-b',
-    email: 'fatima@nutech.edu.pk',
-    phoneNumber: '+92-301-2345678',
-    address: 'G-11 Markaz',
-  },
+  { id: 'stu-001', name: 'Ali Hassan',   role: 'student', rollNumber: 'NUTECH-2023-001', assignedRouteId: 'route-a', email: 'ali@nutech.edu.pk',    phoneNumber: '+92-300-1234567', address: 'Rawalpindi Saddar' },
+  { id: 'stu-002', name: 'Fatima Khan',  role: 'student', rollNumber: 'NUTECH-2023-002', assignedRouteId: 'route-b', email: 'fatima@nutech.edu.pk', phoneNumber: '+92-301-2345678', address: 'G-11 Markaz' },
+  { id: 'stu-003', name: 'Ahmed Raza',   role: 'student', rollNumber: 'NUTECH-2023-003', assignedRouteId: 'route-c', email: 'ahmed@nutech.edu.pk',  phoneNumber: '+92-302-3456789', address: 'Bahria Town Ph4' },
+  { id: 'stu-004', name: 'Sara Malik',   role: 'student', rollNumber: 'NUTECH-2023-004', assignedRouteId: 'route-d', email: 'sara@nutech.edu.pk',   phoneNumber: '+92-303-4567890', address: 'F-10 Markaz' },
+  { id: 'stu-005', name: 'Usman Tariq',  role: 'student', rollNumber: 'NUTECH-2023-005', assignedRouteId: 'route-a', email: 'usman@nutech.edu.pk',  phoneNumber: '+92-304-5678901', address: 'Faizabad' },
+  { id: 'stu-006', name: 'Ayesha Noor',  role: 'student', rollNumber: 'NUTECH-2023-006', assignedRouteId: 'route-b', email: 'ayesha@nutech.edu.pk', phoneNumber: '+92-305-6789012', address: 'G-10 Markaz' },
 ];
 
 export const mockDrivers: DriverUser[] = [
-  {
-    id: 'drv-001',
-    name: 'Muhammad Asif',
-    role: 'driver',
-    employeeId: 'DRV-001',
-    assignedBusId: 'bus-001',
-    phoneNumber: '+92-333-1111111',
-    licenseNumber: 'LHR-2019-12345',
-  },
-  {
-    id: 'drv-002',
-    name: 'Khalid Mehmood',
-    role: 'driver',
-    employeeId: 'DRV-002',
-    assignedBusId: 'bus-002',
-    phoneNumber: '+92-333-2222222',
-    licenseNumber: 'ISB-2018-67890',
-  },
-  {
-    id: 'drv-003',
-    name: 'Tariq Iqbal',
-    role: 'driver',
-    employeeId: 'DRV-003',
-    assignedBusId: 'bus-003',
-    phoneNumber: '+92-333-3333333',
-    licenseNumber: 'RWP-2020-11111',
-  },
-  {
-    id: 'drv-004',
-    name: 'Imran Shahid',
-    role: 'driver',
-    employeeId: 'DRV-004',
-    assignedBusId: 'bus-004',
-    phoneNumber: '+92-333-4444444',
-    licenseNumber: 'ISB-2021-22222',
-  },
+  { id: 'drv-001', name: 'Muhammad Asif',  role: 'driver', employeeId: 'DRV-001', assignedBusId: 'bus-001', phoneNumber: '+92-333-1111111', licenseNumber: 'LHR-2019-12345' },
+  { id: 'drv-002', name: 'Khalid Mehmood', role: 'driver', employeeId: 'DRV-002', assignedBusId: 'bus-002', phoneNumber: '+92-333-2222222', licenseNumber: 'ISB-2018-67890' },
+  { id: 'drv-003', name: 'Tariq Iqbal',    role: 'driver', employeeId: 'DRV-003', assignedBusId: 'bus-003', phoneNumber: '+92-333-3333333', licenseNumber: 'RWP-2020-11111' },
+  { id: 'drv-004', name: 'Imran Shahid',   role: 'driver', employeeId: 'DRV-004', assignedBusId: 'bus-004', phoneNumber: '+92-333-4444444', licenseNumber: 'ISB-2021-22222' },
 ];
 
 export const mockAdmin: AdminUser = {
@@ -261,40 +151,8 @@ export const mockAdmin: AdminUser = {
 // ─── Notifications ───────────────────────────────────────────────────────────
 
 export const mockNotifications: Notification[] = [
-  {
-    id: 'notif-001',
-    title: 'Bus Arriving Soon',
-    message: 'Route A bus is 5 minutes away from Rawalpindi Saddar stop.',
-    type: 'arrival',
-    createdAt: new Date(Date.now() - 5 * 60 * 1000),
-    read: false,
-    routeId: 'route-a',
-  },
-  {
-    id: 'notif-002',
-    title: 'Slight Delay',
-    message: 'Route B bus is delayed by approximately 10 minutes due to traffic at Golra Mor.',
-    type: 'delay',
-    createdAt: new Date(Date.now() - 15 * 60 * 1000),
-    read: false,
-    routeId: 'route-b',
-  },
-  {
-    id: 'notif-003',
-    title: 'System Announcement',
-    message: 'Tomorrow (Friday) buses will run on a reduced schedule. Evening departure at 2:00 PM.',
-    type: 'system',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    read: true,
-    targetRole: 'all',
-  },
-  {
-    id: 'notif-004',
-    title: 'Trip Started',
-    message: 'Route A bus (ISB-001) has started its morning trip from Rawalpindi Saddar.',
-    type: 'info',
-    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    read: true,
-    routeId: 'route-a',
-  },
+  { id: 'notif-001', title: 'Bus Arriving Soon', message: 'Route A bus is 5 minutes away from Rawalpindi Saddar stop.', type: 'arrival', createdAt: new Date(Date.now() - 5 * 60 * 1000), read: false, routeId: 'route-a' },
+  { id: 'notif-002', title: 'Slight Delay', message: 'Route B bus is delayed by approximately 10 minutes due to traffic at Golra Mor.', type: 'delay', createdAt: new Date(Date.now() - 15 * 60 * 1000), read: false, routeId: 'route-b' },
+  { id: 'notif-003', title: 'System Announcement', message: 'Tomorrow (Friday) buses will run on a reduced schedule. Evening departure at 2:00 PM.', type: 'system', createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), read: true, targetRole: 'all' },
+  { id: 'notif-004', title: 'Trip Started', message: 'Route A bus (ISB-001) has started its morning trip from Rawalpindi Saddar.', type: 'info', createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000), read: true, routeId: 'route-a' },
 ];

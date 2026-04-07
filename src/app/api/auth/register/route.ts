@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/prisma';
 import type { ApiResponse } from '@/types';
-
-// In-memory store for demo; in production use a real database
-const registeredUsers: Array<{
-  id: string;
-  name: string;
-  rollNumber: string;
-  email?: string;
-  phoneNumber?: string;
-  routeId: string;
-  createdAt: string;
-}> = [];
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -23,16 +14,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       password: string;
     };
 
-    const { name, rollNumber, email, phoneNumber, routeId } = body;
+    const { name, rollNumber, email, phoneNumber, routeId, password } = body;
 
-    if (!name || !rollNumber || !routeId) {
+    if (!name || !rollNumber || !routeId || !password) {
       return NextResponse.json<ApiResponse>({
         success: false,
-        error: 'Name, roll number, and route are required.',
+        error: 'Name, roll number, route, and password are required.',
       }, { status: 400 });
     }
 
-    const existing = registeredUsers.find((u) => u.rollNumber === rollNumber);
+    const existing = await prisma.user.findFirst({ where: { rollNumber } });
     if (existing) {
       return NextResponse.json<ApiResponse>({
         success: false,
@@ -40,17 +31,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }, { status: 409 });
     }
 
-    const newUser = {
-      id: `stu-${Date.now()}`,
-      name,
-      rollNumber,
-      email,
-      phoneNumber,
-      routeId,
-      createdAt: new Date().toISOString(),
-    };
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    registeredUsers.push(newUser);
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        rollNumber,
+        email,
+        phoneNumber,
+        assignedRouteId: routeId,
+        role: 'student',
+        passwordHash,
+      },
+    });
 
     return NextResponse.json<ApiResponse>({
       success: true,
@@ -64,3 +57,4 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }, { status: 500 });
   }
 }
+
