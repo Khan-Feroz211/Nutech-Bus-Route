@@ -87,21 +87,25 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (updates.validFrom) data.validFrom = new Date(updates.validFrom);
     if (updates.validTo) data.validTo = new Date(updates.validTo);
 
-    // Update the student's assigned route if approved
-    const app = await prisma.busPassApplication.update({
-      where: { id },
-      data,
-      include: {
-        student: { select: { id: true, name: true, email: true, rollNumber: true } },
-      },
-    });
-
-    if (updates.status === 'approved') {
-      await prisma.user.update({
-        where: { id: app.studentId },
-        data: { assignedRouteId: app.routeId },
+    // Update app and student route in a transaction to ensure consistency
+    const app = await prisma.$transaction(async (tx) => {
+      const updated = await tx.busPassApplication.update({
+        where: { id },
+        data,
+        include: {
+          student: { select: { id: true, name: true, email: true, rollNumber: true } },
+        },
       });
-    }
+
+      if (updates.status === 'approved') {
+        await tx.user.update({
+          where: { id: updated.studentId },
+          data: { assignedRouteId: updated.routeId },
+        });
+      }
+
+      return updated;
+    });
 
     return NextResponse.json<ApiResponse>({ success: true, data: app });
   } catch {

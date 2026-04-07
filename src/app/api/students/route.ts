@@ -110,11 +110,13 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
   try {
     const { id } = await req.json() as { id: string };
 
-    // Delete related records first
-    await prisma.report.deleteMany({ where: { studentId: id } });
-    await prisma.busPassApplication.deleteMany({ where: { studentId: id } });
-    await prisma.boardingLog.deleteMany({ where: { studentId: id } });
-    await prisma.user.delete({ where: { id } });
+    // Delete related records in a transaction to ensure consistency
+    await prisma.$transaction([
+      prisma.report.deleteMany({ where: { studentId: id } }),
+      prisma.busPassApplication.deleteMany({ where: { studentId: id } }),
+      prisma.boardingLog.deleteMany({ where: { studentId: id } }),
+      prisma.user.delete({ where: { id } }),
+    ]);
 
     return NextResponse.json<ApiResponse>({ success: true });
   } catch {
