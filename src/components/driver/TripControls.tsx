@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
+import { connectSocket, disconnectSocket } from '@/lib/socket';
 import type { GPSUpdatePayload, TripEventPayload } from '@/types';
 
 interface TripControlsProps {
@@ -28,23 +29,27 @@ export default function TripControls({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const watchIdRef = useRef<number | null>(null);
 
-  const sendLocation = useCallback((lat: number, lng: number, speed?: number, heading?: number) => {
+  const sendLocation = useCallback((lat: number, lng: number, speed?: number | null, heading?: number | null) => {
     const payload: GPSUpdatePayload = {
       busId,
       driverId,
       location: { lat, lng },
-      speed,
-      heading,
+      speed: speed ?? undefined,
+      heading: heading ?? undefined,
       timestamp: Date.now(),
     };
 
-    // In real app this would go via socket.io
-    console.log('[TripControls] GPS Update:', payload);
+    // Emit via socket.io so all clients see real driver GPS
+    const socket = connectSocket();
+    if (socket.connected) {
+      socket.emit('gps:update', payload);
+    }
+
     onLocationUpdate?.(payload);
   }, [busId, driverId, onLocationUpdate]);
 
@@ -60,7 +65,7 @@ export default function TripControls({
         setCurrentLocation({ lat: latitude, lng: longitude });
         setAccuracy(acc);
         setGpsError(null);
-        sendLocation(latitude, longitude, speed ?? undefined);
+        sendLocation(latitude, longitude, speed, null);
       },
       (err) => {
         setGpsError(`GPS Error: ${err.message}`);
@@ -76,15 +81,23 @@ export default function TripControls({
     }
   }, []);
 
-  const startTrip = useCallback(() => {
+  const startTrip = useCallback(async () => {
     setTripStatus('active');
     setElapsedSeconds(0);
+
+    // Connect socket
+    const socket = connectSocket();
+    socket.on('connect', () => setSocketConnected(true));
+    socket.on('disconnect', () => setSocketConnected(false));
+    setSocketConnected(socket.connected);
+
     startGPSWatch();
 
     timerRef.current = setInterval(() => {
       setElapsedSeconds((s) => s + 1);
     }, 1000);
 
+    // Emit trip start event via socket
     const event: TripEventPayload = {
       busId,
       driverId,
@@ -92,14 +105,24 @@ export default function TripControls({
       event: 'start',
       timestamp: Date.now(),
     };
-    console.log('[TripControls] Trip started:', event);
+    connectSocket().emit('trip:event', event);
+
+    // Persist trip to DB
+    try {
+      await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ busId, driverId, routeId, event: 'start' }),
+      });
+    } catch {
+      // non-critical
+    }
   }, [busId, driverId, routeId, startGPSWatch]);
 
-  const endTrip = useCallback(() => {
+  const endTrip = useCallback(async () => {
     setTripStatus('idle');
     stopGPSWatch();
     if (timerRef.current) clearInterval(timerRef.current);
-    if (intervalRef.current) clearInterval(intervalRef.current);
 
     const event: TripEventPayload = {
       busId,
@@ -108,14 +131,27 @@ export default function TripControls({
       event: 'end',
       timestamp: Date.now(),
     };
-    console.log('[TripControls] Trip ended:', event);
+    connectSocket().emit('trip:event', event);
+
+    // Persist trip end to DB
+    try {
+      await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ busId, driverId, routeId, event: 'end' }),
+      });
+    } catch {
+      // non-critical
+    }
+
+    disconnectSocket();
+    setSocketConnected(false);
   }, [busId, driverId, routeId, stopGPSWatch]);
 
   useEffect(() => {
     return () => {
       stopGPSWatch();
       if (timerRef.current) clearInterval(timerRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [stopGPSWatch]);
 
@@ -128,14 +164,40 @@ export default function TripControls({
       : `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
-  const sendBroadcast = () => {
+  const sendBroadcast = async () => {
     if (!broadcastMessage.trim()) return;
     setIsBroadcasting(true);
-    console.log('[TripControls] Broadcast:', broadcastMessage);
+
+    // Emit via socket
+    connectSocket().emit('driver:broadcast', {
+      busId,
+      driverId,
+      routeId,
+      message: broadcastMessage,
+      timestamp: Date.now(),
+    });
+
+    // Persist as notification
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `Driver Update – Bus ${busId}`,
+          message: broadcastMessage,
+          type: 'info',
+          routeId,
+          targetRole: 'student',
+        }),
+      });
+    } catch {
+      // non-critical
+    }
+
     setTimeout(() => {
       setIsBroadcasting(false);
       setBroadcastMessage('');
-    }, 1000);
+    }, 500);
   };
 
   return (
@@ -160,10 +222,14 @@ export default function TripControls({
           </p>
         </div>
         {tripStatus === 'active' && (
-          <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Live
-          </span>
+          <div className="flex items-center gap-2">
+            {socketConnected && (
+              <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Live
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -206,7 +272,7 @@ export default function TripControls({
 
       {/* Broadcast */}
       <div className="p-4 bg-white rounded-xl border border-gray-200">
-        <p className="text-sm font-medium text-gray-700 mb-2">📢 Broadcast Message</p>
+        <p className="text-sm font-medium text-gray-700 mb-2">📢 Broadcast Message to Students</p>
         <div className="flex gap-2">
           <input
             type="text"

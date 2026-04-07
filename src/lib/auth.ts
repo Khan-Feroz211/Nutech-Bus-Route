@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { mockStudents, mockDrivers, mockAdmin } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/prisma';
 import type { UserRole } from '@/types';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -21,47 +22,57 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!identifier || !password || !role) return null;
 
-        if (role === 'student') {
-          const student = mockStudents.find(
-            (s) => s.rollNumber === identifier && password === 'student123'
-          );
-          if (student) {
+        try {
+          if (role === 'student') {
+            const student = await prisma.user.findFirst({
+              where: { rollNumber: identifier, role: 'student' },
+            });
+            if (!student) return null;
+            const valid = await bcrypt.compare(password, student.passwordHash);
+            if (!valid) return null;
             return {
               id: student.id,
               name: student.name,
               email: student.email ?? null,
-              role: 'student',
-              rollNumber: student.rollNumber,
-              assignedRouteId: student.assignedRouteId,
+              role: 'student' as UserRole,
+              rollNumber: student.rollNumber ?? '',
+              assignedRouteId: student.assignedRouteId ?? 'route-a',
             };
           }
-        }
 
-        if (role === 'driver') {
-          const driver = mockDrivers.find(
-            (d) => d.employeeId === identifier && password === '1234'
-          );
-          if (driver) {
+          if (role === 'driver') {
+            const driver = await prisma.user.findFirst({
+              where: { employeeId: identifier, role: 'driver' },
+            });
+            if (!driver) return null;
+            const valid = await bcrypt.compare(password, driver.passwordHash);
+            if (!valid) return null;
             return {
               id: driver.id,
               name: driver.name,
               email: driver.email ?? null,
-              role: 'driver',
-              employeeId: driver.employeeId,
-              assignedBusId: driver.assignedBusId,
+              role: 'driver' as UserRole,
+              employeeId: driver.employeeId ?? '',
+              assignedBusId: driver.assignedBusId ?? '',
             };
           }
-        }
 
-        if (role === 'admin') {
-          if (identifier === mockAdmin.email && password === 'admin123') {
+          if (role === 'admin') {
+            const admin = await prisma.user.findFirst({
+              where: { email: identifier, role: 'admin' },
+            });
+            if (!admin) return null;
+            const valid = await bcrypt.compare(password, admin.passwordHash);
+            if (!valid) return null;
             return {
-              id: mockAdmin.id,
-              name: mockAdmin.name,
-              email: mockAdmin.email,
-              role: 'admin',
+              id: admin.id,
+              name: admin.name,
+              email: admin.email ?? null,
+              role: 'admin' as UserRole,
             };
           }
+        } catch (err) {
+          console.error('[Auth] DB error during authorize:', err);
         }
 
         return null;
@@ -104,8 +115,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: (() => {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
-      // In production at *runtime* (not build), a missing secret is a misconfiguration.
-      // The fallback below is safe only for local development.
       if (process.env.NEXTAUTH_SECRET_REQUIRED === 'true') {
         throw new Error('NEXTAUTH_SECRET environment variable must be set in production');
       }
