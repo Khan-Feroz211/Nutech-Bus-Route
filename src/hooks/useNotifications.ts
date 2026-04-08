@@ -44,9 +44,8 @@ export function useNotifications(routeId?: string) {
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-    // routeId is stable for a session; re-fetching on routeId change is fine
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [routeId]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

@@ -175,7 +175,7 @@ export default function AnnouncementsPage() {
               <div key={notif.id} className="p-3 bg-blue-50 rounded-xl border border-blue-100">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium text-gray-900">{notif.title}</p>
-                  <span className="text-xs text-gray-400 flex-shrink-0">{formatTime(notif.createdAt)}</span>
+                  <span className="text-xs text-gray-400 flex-shrink-0">{formatTime(new Date(notif.createdAt))}</span>
                 </div>
                 <p className="text-sm text-gray-600 mt-0.5">{notif.message}</p>
                 {notif.routeId && (

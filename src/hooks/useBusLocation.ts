@@ -122,6 +122,8 @@ export function useBusLocation(busId: string, simulate = true) {
 
       return () => {
         socket?.off('gps:update', handleGpsUpdate);
+        // Only disconnect if we connected in this effect
+        try { socket?.disconnect(); } catch { /* ignore */ }
       };
     } catch {
       // Socket unavailable — simulation is the only source

@@ -48,7 +48,7 @@ export default function AdminBusesPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [flashMsg, setFlashMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchBuses = useCallback(async () => {
     setLoading(true);
@@ -84,9 +84,9 @@ export default function AdminBusesPage() {
     setShowForm(true);
   }
 
-  function flash(msg: string) {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(''), 3000);
+  function flash(msg: string, type: 'success' | 'error' = 'success') {
+    setFlashMsg({ type, text: msg });
+    setTimeout(() => setFlashMsg(null), 3500);
   }
 
   async function handleSave() {
@@ -153,12 +153,18 @@ export default function AdminBusesPage() {
   }
 
   async function quickStatus(id: string, status: string) {
-    await fetch('/api/buses', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
-    });
-    fetchBuses();
+    try {
+      const res = await fetch('/api/buses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      const data = await res.json();
+      if (!data.success) { flash('Failed to update status. Please try again.', 'error'); return; }
+      fetchBuses();
+    } catch {
+      flash('Network error. Could not update status.', 'error');
+    }
   }
 
   return (
@@ -171,9 +177,13 @@ export default function AdminBusesPage() {
         <Button size="sm" onClick={openAdd}>+ Add Bus</Button>
       </div>
 
-      {successMsg && (
-        <div className="px-4 py-3 bg-green-50 text-green-700 border border-green-200 rounded-xl text-sm font-medium">
-          ✅ {successMsg}
+      {flashMsg && (
+        <div className={`px-4 py-3 rounded-xl text-sm font-medium border ${
+          flashMsg.type === 'success'
+            ? 'bg-green-50 text-green-700 border-green-200'
+            : 'bg-red-50 text-red-700 border-red-200'
+        }`}>
+          {flashMsg.type === 'success' ? '✅' : '❌'} {flashMsg.text}
         </div>
       )}
 
