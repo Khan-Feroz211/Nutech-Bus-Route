@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import type { UserRole } from '@/types';
@@ -13,8 +14,11 @@ const ROLES: { value: UserRole; label: string; icon: string; desc: string }[] = 
   { value: 'admin', label: 'Admin', icon: '⚙️', desc: 'Email + password' },
 ];
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registered = searchParams.get('registered') === 'true';
+
   const [role, setRole] = useState<UserRole>('student');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -68,6 +72,12 @@ export default function LoginPage() {
           <p className="text-white/70 text-sm mt-1">National University of Technology</p>
         </div>
 
+        {registered && (
+          <div className="mb-4 px-4 py-3 bg-green-500/20 border border-green-400/40 rounded-xl text-white text-sm text-center">
+            ✅ Account created successfully! You can now sign in.
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-5">Sign In</h2>
 
@@ -109,7 +119,7 @@ export default function LoginPage() {
             />
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg border border-red-200">{error}</p>
             )}
 
             <Button type="submit" size="lg" className="w-full" loading={loading}>
@@ -126,6 +136,13 @@ export default function LoginPage() {
               <p>⚙️ Admin: <span className="font-mono">admin@nutech.edu.pk</span> / <span className="font-mono">admin123</span></p>
             </div>
           </div>
+
+          <p className="text-center text-sm text-gray-500 mt-4">
+            New student?{' '}
+            <Link href="/register" className="text-nutech-blue font-medium hover:underline">
+              Register here
+            </Link>
+          </p>
         </div>
 
         <p className="text-center text-white/50 text-xs mt-4">
@@ -133,5 +150,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-nutech-blue to-nutech-blue-light flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
