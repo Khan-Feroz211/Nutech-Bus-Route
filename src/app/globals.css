@@ -5,6 +5,8 @@
 :root {
   --nutech-blue: #1B3A6B;
   --nutech-green: #22C55E;
+  --nutech-cyan: #00C2A8;
+  --nutech-slate: #0f172a;
 }
 
 * {
@@ -17,6 +19,23 @@ html {
 
 body {
   min-height: 100vh;
+  background: radial-gradient(1200px 600px at 10% 0%, #e9f2ff 0%, #f8fbff 30%, #ffffff 70%);
+  color: #0f172a;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.55s ease-out both;
 }
 
 /* Safe area for mobile bottom nav */

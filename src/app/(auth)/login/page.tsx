@@ -4,14 +4,15 @@ import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import type { UserRole } from '@/types';
 
 const ROLES: { value: UserRole; label: string; icon: string; desc: string }[] = [
-  { value: 'student', label: 'Student', icon: '', desc: 'Roll number + password' },
-  { value: 'driver', label: 'Driver', icon: '', desc: 'Employee ID + PIN' },
-  { value: 'admin', label: 'Admin', icon: '', desc: 'Email + password' },
+  { value: 'student', label: 'Student', icon: '🎓', desc: 'Roll number + password' },
+  { value: 'driver', label: 'Driver', icon: '🚌', desc: 'Employee ID + PIN' },
+  { value: 'admin', label: 'Admin', icon: '⚙️', desc: 'Email + password' },
 ];
 
 function LoginForm() {
@@ -61,11 +62,13 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-nutech-blue to-nutech-blue-light flex items-center justify-center p-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-nutech-blue via-[#0E2A54] to-[#0A1E3F] flex items-center justify-center p-4 overflow-hidden">
+      <div className="absolute -top-20 -left-16 w-72 h-72 rounded-full bg-white/10 blur-3xl animate-pulse" />
+      <div className="absolute -bottom-20 -right-16 w-80 h-80 rounded-full bg-[#00C2A8]/20 blur-3xl animate-pulse" />
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-nutech-blue font-black text-2xl">N</span>
+        <div className="text-center mb-8 animate-fade-up">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg ring-4 ring-white/20">
+            <Image src="/nutech-logo.png" alt="NUTECH Logo" width={40} height={40} className="object-contain" priority />
           </div>
           <h1 className="text-2xl font-bold text-white">NUTECH BusTrack</h1>
           <p className="text-white/70 text-sm mt-1">National University of Technology</p>
@@ -77,7 +80,7 @@ function LoginForm() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-xl p-6">
+        <div className="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-6 animate-fade-up">
           <h2 className="text-xl font-bold text-gray-900 mb-5">Sign In</h2>
 
           <div className="grid grid-cols-3 gap-2 mb-5">
@@ -87,8 +90,8 @@ function LoginForm() {
                 onClick={() => { setRole(r.value); setIdentifier(''); setError(''); }}
                 className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
                   role === r.value
-                    ? 'border-nutech-blue bg-blue-50 text-nutech-blue'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    ? 'border-nutech-blue bg-blue-50 text-nutech-blue shadow-sm'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 <span className="text-xl">{r.icon}</span>
@@ -109,7 +112,7 @@ function LoginForm() {
             <Input
               label={passwordLabels[role]}
               type="password"
-              placeholder={role === 'driver' ? '' : ''}
+              placeholder={role === 'driver' ? '••••' : '••••••••'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -145,7 +148,7 @@ function LoginForm() {
         </div>
 
         <p className="text-center text-white/50 text-xs mt-4">
-           {new Date().getFullYear()} NUTECH University, Islamabad
+          © {new Date().getFullYear()} NUTECH University, Islamabad
         </p>
       </div>
     </div>

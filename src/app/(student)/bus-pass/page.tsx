@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -34,18 +34,27 @@ export default function BusPassPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  async function fetchApps() {
+  const fetchApps = useCallback(async () => {
     if (!studentId) return;
     try {
       const res = await fetch(`/api/bus-pass?studentId=${studentId}`);
       const data = await res.json();
       if (data.success) setMyApps(data.data);
+      else setError(data.error ?? 'Unable to load bus pass applications.');
+    } catch {
+      setError('Unable to load bus pass applications. Please try again.');
     } finally {
       setLoading(false);
     }
-  }
+  }, [studentId]);
 
-  useEffect(() => { fetchApps(); }, [studentId]);
+  useEffect(() => {
+    setRouteId(assignedRouteId);
+  }, [assignedRouteId]);
+
+  useEffect(() => {
+    fetchApps();
+  }, [fetchApps]);
 
   async function handleApply(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +62,10 @@ export default function BusPassPage() {
     setError('');
     setSuccess('');
     try {
+      if (!studentId) {
+        setError('Session not ready. Please refresh and try again.');
+        return;
+      }
       const res = await fetch('/api/bus-pass', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,10 +74,12 @@ export default function BusPassPage() {
       const data = await res.json();
       if (data.success) {
         setSuccess('Application submitted! Admin will review it shortly.');
-        fetchApps();
+        await fetchApps();
       } else {
         setError(data.error ?? 'Failed to submit application.');
       }
+    } catch {
+      setError('Failed to submit application. Please try again.');
     } finally {
       setApplying(false);
     }
@@ -79,6 +94,16 @@ export default function BusPassPage() {
         <h1 className="text-xl font-bold text-gray-900">Bus Pass</h1>
         <p className="text-sm text-gray-500 mt-0.5">Apply for or manage your bus pass</p>
       </div>
+
+      {loading && (
+        <Card className="text-center py-8 text-gray-500">Loading bus pass details...</Card>
+      )}
+
+      {!loading && !studentId && (
+        <Card className="text-center py-8 text-gray-600">
+          <p className="font-medium">You need to sign in again to manage bus pass.</p>
+        </Card>
+      )}
 
       {/* Active pass */}
       {activePass && (

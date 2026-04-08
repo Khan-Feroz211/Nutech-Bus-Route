@@ -2,17 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { ApiResponse } from '@/types';
 
-interface TripRecord {
-  id: string;
-  busId: string;
-  driverId: string;
-  routeId: string;
-  startTime: string;
-  endTime?: string;
-  status: 'active' | 'completed';
-  direction: string;
-}
-
 export async function GET(): Promise<NextResponse> {
   try {
     const trips = await prisma.trip.findMany({

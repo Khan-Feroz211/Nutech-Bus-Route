@@ -4,9 +4,7 @@ import path from 'path';
 
 function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('DATABASE_URL environment variable must be set in production.');
-  }
+  // Build/runtime fallback for local/demo environments.
   return `file:${path.join(process.cwd(), 'prisma', 'dev.db')}`;
 }
 

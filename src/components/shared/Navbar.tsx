@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -47,8 +48,8 @@ export default function Navbar() {
       {/* Desktop top navbar */}
       <nav className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-nutech-blue z-50 items-center px-6 shadow-md">
         <Link href={role === 'admin' ? '/admin' : role === 'driver' ? '/driver' : '/dashboard'} className="flex items-center gap-2 mr-8">
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-            <span className="text-nutech-blue font-bold text-sm">N</span>
+          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden">
+            <Image src="/nutech-logo.png" alt="NUTECH Logo" width={22} height={22} className="object-contain" />
           </div>
           <span className="text-white font-bold text-lg">NUTECH BusTrack</span>
         </Link>
@@ -113,7 +114,10 @@ export default function Navbar() {
 
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-nutech-blue z-50 flex items-center px-4 shadow-sm">
-        <span className="text-white font-bold">NUTECH BusTrack</span>
+        <div className="flex items-center gap-2">
+          <Image src="/nutech-logo.png" alt="NUTECH Logo" width={24} height={24} className="object-contain" />
+          <span className="text-white font-bold">NUTECH BusTrack</span>
+        </div>
         <div className="ml-auto flex items-center gap-2">
           {role === 'student' && <NotificationBell light />}
           <button

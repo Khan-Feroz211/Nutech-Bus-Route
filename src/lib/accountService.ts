@@ -7,8 +7,13 @@ const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_PER_IP = 10;
 const RATE_LIMIT_MAX_PER_IDENTIFIER = 5;
+const RATE_LIMIT_MAX_KEYS = 2000;
 
 let seeded = false;
+
+type RateWindow = { count: number; resetAt: number };
+const ipWindows = new Map<string, RateWindow>();
+const identifierWindows = new Map<string, RateWindow>();
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
@@ -48,30 +53,45 @@ export async function ensureStudentSeedData(): Promise<void> {
 
 export async function enforceResetRateLimit(identifier: string, ipAddress: string): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
   const now = Date.now();
-  const windowStart = new Date(now - RATE_LIMIT_WINDOW_MS);
-
-  await prisma.passwordResetRequest.deleteMany({
-    where: { createdAt: { lt: windowStart } },
-  });
-
   const normalizedIdentifier = normalize(identifier);
-  const [ipCount, identifierCount] = await Promise.all([
-    prisma.passwordResetRequest.count({ where: { ipAddress, createdAt: { gte: windowStart } } }),
-    prisma.passwordResetRequest.count({ where: { identifier: normalizedIdentifier, createdAt: { gte: windowStart } } }),
-  ]);
 
-  if (ipCount >= RATE_LIMIT_MAX_PER_IP || identifierCount >= RATE_LIMIT_MAX_PER_IDENTIFIER) {
-    return { allowed: false, retryAfterSeconds: Math.floor(RATE_LIMIT_WINDOW_MS / 1000) };
+  const enforceWindow = (
+    key: string,
+    max: number,
+    store: Map<string, RateWindow>
+  ): { allowed: boolean; retryAfterSeconds?: number } => {
+    const current = store.get(key);
+    if (!current || current.resetAt <= now) {
+      store.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+      return { allowed: true };
+    }
+
+    if (current.count >= max) {
+      return {
+        allowed: false,
+        retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+      };
+    }
+
+    current.count += 1;
+    store.set(key, current);
+    return { allowed: true };
+  };
+
+  // Opportunistic cleanup to keep memory bounded.
+  if (ipWindows.size > RATE_LIMIT_MAX_KEYS || identifierWindows.size > RATE_LIMIT_MAX_KEYS) {
+    for (const [key, value] of ipWindows) {
+      if (value.resetAt <= now) ipWindows.delete(key);
+    }
+    for (const [key, value] of identifierWindows) {
+      if (value.resetAt <= now) identifierWindows.delete(key);
+    }
   }
 
-  await prisma.passwordResetRequest.create({
-    data: {
-      identifier: normalizedIdentifier,
-      ipAddress,
-    },
-  });
+  const byIp = enforceWindow(ipAddress || 'unknown', RATE_LIMIT_MAX_PER_IP, ipWindows);
+  if (!byIp.allowed) return byIp;
 
-  return { allowed: true };
+  return enforceWindow(normalizedIdentifier, RATE_LIMIT_MAX_PER_IDENTIFIER, identifierWindows);
 }
 
 export async function createPasswordReset(input: { identifier: string }): Promise<{ email?: string; name?: string; token?: string }> {
