@@ -12,7 +12,7 @@ export default function NotificationsPage() {
   const { data: session } = useSession();
   const assignedRouteId = (session?.user as Record<string, unknown>)?.assignedRouteId as string ?? 'route-a';
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(assignedRouteId);
+  const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useNotifications(assignedRouteId);
 
   const [prefs, setPrefs] = useState<NotificationPreferences>({
     busArrival: true,
@@ -51,7 +51,12 @@ export default function NotificationsPage() {
 
       {/* Notification list */}
       <div className="space-y-2">
-        {notifications.length === 0 ? (
+        {loading ? (
+          <Card className="text-center py-10">
+            <div className="w-6 h-6 border-2 border-nutech-blue/30 border-t-nutech-blue rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Loading notifications…</p>
+          </Card>
+        ) : notifications.length === 0 ? (
           <Card className="text-center py-10">
             <p className="text-4xl mb-2">🎉</p>
             <p className="font-medium text-gray-700">No notifications</p>

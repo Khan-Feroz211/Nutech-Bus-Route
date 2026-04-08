@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import type { LatLng, GPSUpdatePayload } from '@/types';
 import { mockBuses, mockRoutes } from '@/lib/db';
+import { getSocket } from '@/lib/socket';
 
 interface BusLocationState {
   location: LatLng | null;
@@ -25,6 +26,7 @@ export function useBusLocation(busId: string, simulate = true) {
 
   const waypointIndexRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const liveGpsRef = useRef(false); // true once a real GPS packet arrives
 
   const getBusWaypoints = useCallback(() => {
     const bus = mockBuses.find((b) => b.id === busId);
@@ -34,6 +36,7 @@ export function useBusLocation(busId: string, simulate = true) {
   }, [busId]);
 
   const simulateMovement = useCallback(() => {
+    if (liveGpsRef.current) return; // real GPS is active – skip simulation
     const waypoints = getBusWaypoints();
     if (waypoints.length === 0) return;
 
@@ -41,7 +44,6 @@ export function useBusLocation(busId: string, simulate = true) {
     const nextIndex = (currentIndex + 1) % waypoints.length;
     const currentWp = waypoints[currentIndex];
 
-    // calculate heading
     const nextWp = waypoints[nextIndex];
     const dLng = nextWp.lng - currentWp.lng;
     const dLat = nextWp.lat - currentWp.lat;
@@ -64,8 +66,8 @@ export function useBusLocation(busId: string, simulate = true) {
     });
   }, [getBusWaypoints]);
 
+  // Set initial location from mock data
   useEffect(() => {
-    // Set initial location
     const bus = mockBuses.find((b) => b.id === busId);
     if (bus?.currentLocation) {
       setState((prev) => ({
@@ -77,19 +79,67 @@ export function useBusLocation(busId: string, simulate = true) {
         isLive: bus.status === 'active',
       }));
     }
+  }, [busId]);
 
+  // Start simulation loop
+  useEffect(() => {
     if (!simulate) return;
-
-    // Start simulation
     intervalRef.current = setInterval(simulateMovement, 5000);
-
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [busId, simulate, simulateMovement]);
+  }, [simulate, simulateMovement]);
+
+  // Attempt to receive live GPS from driver via Socket.io
+  useEffect(() => {
+    let socket: ReturnType<typeof getSocket> | null = null;
+
+    try {
+      socket = getSocket();
+      socket.connect();
+
+      const handleGpsUpdate = (payload: GPSUpdatePayload) => {
+        if (payload.busId !== busId) return;
+
+        // Real GPS arrived — stop simulation, go live
+        liveGpsRef.current = true;
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+
+        setState({
+          location: payload.location,
+          heading: payload.heading ?? 0,
+          speed: payload.speed ?? 0,
+          isLive: true,
+          lastUpdated: new Date(payload.timestamp),
+          etaMinutes: null,
+        });
+      };
+
+      socket.on('gps:update', handleGpsUpdate);
+
+      return () => {
+        socket?.off('gps:update', handleGpsUpdate);
+        // Only disconnect if we connected in this effect
+        try { socket?.disconnect(); } catch { /* ignore */ }
+      };
+    } catch {
+      // Socket unavailable — simulation is the only source
+    }
+  }, [busId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const handleExternalUpdate = useCallback((payload: GPSUpdatePayload) => {
     if (payload.busId !== busId) return;
+    liveGpsRef.current = true;
     setState({
       location: payload.location,
       heading: payload.heading ?? 0,

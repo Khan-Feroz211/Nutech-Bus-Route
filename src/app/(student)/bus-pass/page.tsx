@@ -178,15 +178,17 @@ export default function BusPassPage() {
         </Card>
       )}
 
-      {/* History */}
-      {myApps.filter((a) => a.status === 'rejected').length > 0 && (
+      {/* History - all past (non-pending, non-active) applications */}
+      {myApps.filter((a) => a.status !== 'pending' && a !== activePass).length > 0 && (
         <Card>
           <h2 className="font-semibold text-gray-900 mb-3">Past Applications</h2>
           <div className="space-y-2">
-            {myApps.filter((a) => a.status === 'rejected').map((app) => (
+            {myApps.filter((a) => a.status !== 'pending' && a !== activePass).map((app) => (
               <div key={app.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded-lg">
                 <span className="text-gray-700">{app.semester} · {mockRoutes.find((r) => r.id === app.routeId)?.label}</span>
-                <Badge variant="danger">Rejected</Badge>
+                <Badge variant={app.status === 'approved' ? 'success' : 'danger'}>
+                  {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                </Badge>
               </div>
             ))}
           </div>

@@ -27,6 +27,7 @@ const driverNav: NavItem[] = [
 const adminNav: NavItem[] = [
   { label: 'Fleet', href: '/admin', icon: <HomeIcon /> },
   { label: 'Routes', href: '/admin/routes', icon: <MapIcon /> },
+  { label: 'Buses', href: '/admin/buses', icon: <TruckIcon /> },
   { label: 'Students', href: '/admin/students', icon: <UsersIcon /> },
   { label: 'Bus Passes', href: '/admin/bus-passes', icon: <BellIcon /> },
   { label: 'Reports', href: '/admin/reports', icon: <ReportIcon /> },

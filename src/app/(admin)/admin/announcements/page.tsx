@@ -1,12 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { mockRoutes } from '@/lib/db';
-import { mockNotifications } from '@/lib/db';
 import { formatTime } from '@/lib/utils';
+
+interface DBNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  targetRole?: string;
+  routeId?: string;
+  createdAt: string;
+}
 
 export default function AnnouncementsPage() {
   const [title, setTitle] = useState('');
@@ -16,7 +25,26 @@ export default function AnnouncementsPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const sysNotifs = mockNotifications.filter((n) => n.type === 'system' || n.targetRole === 'all');
+  const [announcements, setAnnouncements] = useState<DBNotification[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
+
+  const fetchAnnouncements = useCallback(async () => {
+    setLoadingList(true);
+    try {
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const sysNotifs = (data.data as DBNotification[]).filter(
+          (n) => n.type === 'system' || n.targetRole === 'all'
+        );
+        setAnnouncements(sysNotifs);
+      }
+    } finally {
+      setLoadingList(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +65,7 @@ export default function AnnouncementsPage() {
       setSent(true);
       setTitle('');
       setMessage('');
+      fetchAnnouncements();
       setTimeout(() => setSent(false), 3000);
     } finally {
       setLoading(false);
@@ -51,7 +80,7 @@ export default function AnnouncementsPage() {
       <Card>
         <h2 className="font-semibold text-gray-900 mb-4">Send Announcement</h2>
         {sent && (
-          <div className="mb-3 p-3 bg-green-50 text-green-700 text-sm rounded-lg">
+          <div className="mb-3 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200">
             ✅ Announcement sent successfully!
           </div>
         )}
@@ -127,18 +156,37 @@ export default function AnnouncementsPage() {
 
       {/* Past announcements */}
       <Card>
-        <h2 className="font-semibold text-gray-900 mb-3">Recent Announcements</h2>
-        <div className="space-y-3">
-          {sysNotifs.map((notif) => (
-            <div key={notif.id} className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium text-gray-900">{notif.title}</p>
-                <span className="text-xs text-gray-400 flex-shrink-0">{formatTime(notif.createdAt)}</span>
+        <h2 className="font-semibold text-gray-900 mb-3">
+          Recent Announcements
+          {announcements.length > 0 && (
+            <span className="ml-2 text-xs font-normal text-gray-400">({announcements.length})</span>
+          )}
+        </h2>
+        {loadingList ? (
+          <div className="text-center py-6 text-gray-400 text-sm">Loading…</div>
+        ) : announcements.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-2xl mb-1">📢</p>
+            <p className="text-sm text-gray-500">No announcements yet. Send one above!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {announcements.map((notif) => (
+              <div key={notif.id} className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-gray-900">{notif.title}</p>
+                  <span className="text-xs text-gray-400 flex-shrink-0">{formatTime(new Date(notif.createdAt))}</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-0.5">{notif.message}</p>
+                {notif.routeId && (
+                  <p className="text-xs text-blue-500 mt-1">
+                    Route: {mockRoutes.find((r) => r.id === notif.routeId)?.label ?? notif.routeId}
+                  </p>
+                )}
               </div>
-              <p className="text-sm text-gray-600 mt-0.5">{notif.message}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -18,10 +18,46 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [phone, setPhone] = useState(student.phoneNumber ?? '');
   const [address, setAddress] = useState(student.address ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  async function handleSave() {
+    if (!userId) { setSaveMsg({ type: 'error', text: 'Session expired. Please sign in again.' }); return; }
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const res = await fetch('/api/students', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, phoneNumber: phone, address }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveMsg({ type: 'success', text: 'Profile updated successfully!' });
+        setEditing(false);
+      } else {
+        setSaveMsg({ type: 'error', text: data.error ?? 'Failed to save changes.' });
+      }
+    } catch {
+      setSaveMsg({ type: 'error', text: 'Network error. Please try again.' });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
       <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
+
+      {saveMsg && (
+        <div className={`px-4 py-3 rounded-xl text-sm font-medium ${
+          saveMsg.type === 'success'
+            ? 'bg-green-50 text-green-700 border border-green-200'
+            : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {saveMsg.type === 'success' ? '✅ ' : '❌ '}{saveMsg.text}
+        </div>
+      )}
 
       {/* Avatar card */}
       <Card>
@@ -67,7 +103,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-gray-900">Contact Info</h3>
           <button
-            onClick={() => setEditing((e) => !e)}
+            onClick={() => { setEditing((e) => !e); setSaveMsg(null); }}
             className="text-sm text-nutech-blue hover:underline"
           >
             {editing ? 'Cancel' : 'Edit'}
@@ -89,8 +125,9 @@ export default function ProfilePage() {
               placeholder="Your neighbourhood"
             />
             <Button
-              onClick={() => setEditing(false)}
+              onClick={handleSave}
               className="w-full"
+              loading={saving}
             >
               Save Changes
             </Button>
