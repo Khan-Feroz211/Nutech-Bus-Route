@@ -41,4 +41,11 @@ next-env.d.ts
 # server dist
 /server/dist
 
+<<<<<<< HEAD
+# prisma local database
+/prisma/*.db
+/prisma/*.db-journal
+/prisma/**/*.db
+/prisma/**/*.db-journal
+
 /src/generated/prisma
