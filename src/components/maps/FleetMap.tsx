@@ -17,8 +17,8 @@ declare global {
 
 export default function FleetMap({ buses, routes, height = '500px' }: FleetMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<Map<string, any>>(new Map());
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [apiError, setApiError] = useState(false);
 

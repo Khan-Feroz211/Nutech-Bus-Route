@@ -6,6 +6,8 @@ Real-time bus tracking SaaS platform for **National University of Technology (NU
 
 - 🗺️ **Live Tracking** – Google Maps with animated bus marker (GPS simulation built-in)
 - 👤 **Multi-role Auth** – Student, Driver, and Admin portals (NextAuth.js v5)
+- 🔐 **Secure Student Auth** – Database-backed signup/login with bcrypt-hashed passwords
+- 📧 **Password Recovery** – Email reset links with token expiry and rate limiting
 - 📅 **Schedule** – Morning/evening timetables for 4 routes
 - 🔔 **Notifications** – Arrival alerts, delay alerts, admin announcements
 - 📱 **PWA** – Install as mobile app, offline support via Service Worker
@@ -40,6 +42,10 @@ cd server && npm install && cd ..
 cp .env.example .env.local
 # Edit .env.local with your values
 
+# Initialize database
+npm run prisma:generate
+npm run prisma:push
+
 # Run (two terminals)
 npm run dev          # Next.js on :3000
 npm run server:dev   # Socket server on :3001
@@ -62,6 +68,12 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=   # Optional – fallback UI if blank
 NEXTAUTH_SECRET=                    # Min 32 chars
 NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+DATABASE_URL=file:./prisma/dev.db
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
 ```
 
 ## Build

@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/Input';
 import type { UserRole } from '@/types';
 
 const ROLES: { value: UserRole; label: string; icon: string; desc: string }[] = [
-  { value: 'student', label: 'Student', icon: '🎓', desc: 'Roll number + password' },
-  { value: 'driver', label: 'Driver', icon: '🚌', desc: 'Employee ID + PIN' },
-  { value: 'admin', label: 'Admin', icon: '⚙️', desc: 'Email + password' },
+  { value: 'student', label: 'Student', icon: '', desc: 'Roll number + password' },
+  { value: 'driver', label: 'Driver', icon: '', desc: 'Employee ID + PIN' },
+  { value: 'admin', label: 'Admin', icon: '', desc: 'Email + password' },
 ];
 
 function LoginForm() {
@@ -63,7 +63,6 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-nutech-blue to-nutech-blue-light flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-nutech-blue font-black text-2xl">N</span>
@@ -74,14 +73,13 @@ function LoginForm() {
 
         {registered && (
           <div className="mb-4 px-4 py-3 bg-green-500/20 border border-green-400/40 rounded-xl text-white text-sm text-center">
-            ✅ Account created successfully! You can now sign in.
+            Account created successfully. You can now sign in.
           </div>
         )}
 
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-5">Sign In</h2>
 
-          {/* Role selector */}
           <div className="grid grid-cols-3 gap-2 mb-5">
             {ROLES.map((r) => (
               <button
@@ -111,7 +109,7 @@ function LoginForm() {
             <Input
               label={passwordLabels[role]}
               type="password"
-              placeholder={role === 'driver' ? '••••' : '••••••••'}
+              placeholder={role === 'driver' ? '' : ''}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -125,28 +123,29 @@ function LoginForm() {
             <Button type="submit" size="lg" className="w-full" loading={loading}>
               Sign In
             </Button>
+
+            <div className="flex items-center justify-between text-sm pt-1">
+              <Link href="/register" className="text-nutech-blue font-medium hover:underline">
+                Create Account
+              </Link>
+              <Link href="/forgot-password" className="text-gray-500 hover:text-gray-700 hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
           </form>
 
-          {/* Demo hint */}
           <div className="mt-5 p-3 bg-gray-50 rounded-xl">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Demo Credentials</p>
             <div className="space-y-1 text-xs text-gray-600">
-              <p>🎓 Student: <span className="font-mono">NUTECH-2023-001</span> / <span className="font-mono">student123</span></p>
-              <p>🚌 Driver: <span className="font-mono">DRV-001</span> / <span className="font-mono">1234</span></p>
-              <p>⚙️ Admin: <span className="font-mono">admin@nutech.edu.pk</span> / <span className="font-mono">admin123</span></p>
+              <p>Student: <span className="font-mono">NUTECH-2023-001</span> / <span className="font-mono">student123</span></p>
+              <p>Driver: <span className="font-mono">DRV-001</span> / <span className="font-mono">1234</span></p>
+              <p>Admin: <span className="font-mono">admin@nutech.edu.pk</span> / <span className="font-mono">admin123</span></p>
             </div>
           </div>
-
-          <p className="text-center text-sm text-gray-500 mt-4">
-            New student?{' '}
-            <Link href="/register" className="text-nutech-blue font-medium hover:underline">
-              Register here
-            </Link>
-          </p>
         </div>
 
         <p className="text-center text-white/50 text-xs mt-4">
-          © {new Date().getFullYear()} NUTECH University, Islamabad
+           {new Date().getFullYear()} NUTECH University, Islamabad
         </p>
       </div>
     </div>

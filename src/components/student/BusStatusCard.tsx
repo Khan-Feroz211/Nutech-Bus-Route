@@ -1,7 +1,6 @@
 'use client';
 
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { getBusStatusColor, getBusStatusLabel, formatETA } from '@/lib/utils';
 import type { Bus, BusRoute, DriverUser } from '@/types';
 

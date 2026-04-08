@@ -43,15 +43,16 @@ export default function RegisterPage() {
         body: JSON.stringify(form),
       });
 
-      const data = await res.json() as { success: boolean; error?: string };
+      const text = await res.text();
+      const data = (text ? JSON.parse(text) : {}) as { success?: boolean; error?: string };
 
-      if (!data.success) {
-        setError(data.error ?? 'Registration failed.');
+      if (!res.ok || !data.success) {
+        setError(data.error ?? `Registration failed (HTTP ${res.status}).`);
       } else {
         router.push('/login?registered=true');
       }
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

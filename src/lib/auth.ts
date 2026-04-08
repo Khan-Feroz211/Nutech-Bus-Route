@@ -25,7 +25,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           if (role === 'student') {
             const student = await prisma.user.findFirst({
-              where: { rollNumber: identifier, role: 'student' },
+              where: {
+                role: 'student',
+                OR: [{ rollNumber: identifier }, { email: identifier.toLowerCase() }],
+              },
             });
             if (!student) return null;
             const valid = await bcrypt.compare(password, student.passwordHash);

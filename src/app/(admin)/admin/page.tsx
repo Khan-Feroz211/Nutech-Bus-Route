@@ -30,15 +30,13 @@ export default function AdminDashboard() {
         <p className="text-sm text-gray-500 mt-0.5">Real-time status of all NUTECH buses</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total Buses" value={buses.length.toString()} icon="🚌" color="blue" />
-        <StatCard label="Active" value={activeBuses.toString()} icon="✅" color="green" />
-        <StatCard label="Idle" value={idleBuses.toString()} icon="⏸️" color="yellow" />
-        <StatCard label="Routes" value={mockRoutes.length.toString()} icon="🗺️" color="purple" />
+        <StatCard label="Total Buses" value={buses.length.toString()} icon="BUS" color="blue" />
+        <StatCard label="Active" value={activeBuses.toString()} icon="ON" color="green" />
+        <StatCard label="Idle" value={idleBuses.toString()} icon="ID" color="yellow" />
+        <StatCard label="Routes" value={mockRoutes.length.toString()} icon="RT" color="purple" />
       </div>
 
-      {/* Fleet map */}
       <Card padding="none" className="overflow-hidden">
         <div className="px-4 pt-4 pb-2 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">Live Fleet Map</h2>
@@ -46,11 +44,10 @@ export default function AdminDashboard() {
         <FleetMap buses={buses} routes={mockRoutes} height="450px" />
       </Card>
 
-      {/* Bus table */}
       <Card>
         <h2 className="font-semibold text-gray-900 mb-4">Bus Status</h2>
         {loading ? (
-          <div className="text-center py-8 text-gray-400">Loading…</div>
+          <div className="text-center py-8 text-gray-400">Loading...</div>
         ) : (
           <BusTable buses={buses} routes={mockRoutes} drivers={mockDrivers} />
         )}
@@ -87,4 +84,3 @@ function StatCard({
     </div>
   );
 }
-

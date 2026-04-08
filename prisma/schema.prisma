@@ -36,6 +36,7 @@ model User {
   reports         Report[]
   busPassApps     BusPassApplication[]
   boardingLogs    BoardingLog[]
+  passwordResets  PasswordResetToken[]
 }
 
 // ─── Bus Route ────────────────────────────────────────────────────────────────
@@ -160,4 +161,23 @@ model BoardingLog {
   bus       Bus      @relation(fields: [busId], references: [id])
   route     BusRoute @relation(fields: [routeId], references: [id])
   trip      Trip?    @relation(fields: [tripId], references: [id])
+}
+
+// ─── Auth Recovery ───────────────────────────────────────────────────────────
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+}
+
+model PasswordResetRequest {
+  id         String   @id @default(cuid())
+  identifier String
+  ipAddress  String
+  createdAt  DateTime @default(now())
 }

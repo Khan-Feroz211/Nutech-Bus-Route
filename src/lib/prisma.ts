@@ -7,7 +7,6 @@ function getDbUrl(): string {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('DATABASE_URL environment variable must be set in production.');
   }
-  // Dev fallback: SQLite file next to the project root
   return `file:${path.join(process.cwd(), 'prisma', 'dev.db')}`;
 }
 

@@ -23,22 +23,41 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }, { status: 400 });
     }
 
-    const existing = await prisma.user.findFirst({ where: { rollNumber } });
-    if (existing) {
+    if (password.trim().length < 6) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Password must be at least 6 characters long.',
+      }, { status: 400 });
+    }
+
+    const normalizedEmail = email?.trim().toLowerCase() || undefined;
+
+    const existingRoll = await prisma.user.findFirst({ where: { rollNumber: rollNumber.trim(), role: 'student' } });
+    if (existingRoll) {
       return NextResponse.json<ApiResponse>({
         success: false,
         error: 'This roll number is already registered.',
       }, { status: 409 });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    if (normalizedEmail) {
+      const existingEmail = await prisma.user.findFirst({ where: { email: normalizedEmail, role: 'student' } });
+      if (existingEmail) {
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: 'This email is already registered.',
+        }, { status: 409 });
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(password.trim(), 12);
 
     const newUser = await prisma.user.create({
       data: {
-        name,
-        rollNumber,
-        email,
-        phoneNumber,
+        name: name.trim(),
+        rollNumber: rollNumber.trim(),
+        email: normalizedEmail,
+        phoneNumber: phoneNumber?.trim(),
         assignedRouteId: routeId,
         role: 'student',
         passwordHash,
@@ -57,4 +76,3 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }, { status: 500 });
   }
 }
-
