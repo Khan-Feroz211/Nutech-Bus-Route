@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { createEmailVerificationOtp, enforceRegistrationRateLimit } from '@/lib/accountService';
-import { sendEmailVerificationOtp } from '@/lib/email';
+import { getEmailTransportStatus, sendEmailVerificationOtp } from '@/lib/email';
 import { validateEmailStructure, analyzePasswordStrength } from '@/lib/passwordSecurity';
 import type { ApiResponse } from '@/types';
 
@@ -40,6 +40,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         success: false,
         error: 'Name, roll number, route, and password are required.',
       }, { status: 400 });
+    }
+
+    const emailStatus = getEmailTransportStatus();
+    if (!emailStatus.ready) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: `Email service is not configured: ${emailStatus.reason}`,
+      }, { status: 503 });
     }
 
     // SECURITY: Email validation before rate limiting

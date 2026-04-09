@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/types';
 import { createPasswordReset, enforceResetRateLimit } from '@/lib/accountService';
-import { sendPasswordResetEmail } from '@/lib/email';
+import { getEmailTransportStatus, sendPasswordResetEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -12,6 +12,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Roll number or email is required.' },
         { status: 400 }
+      );
+    }
+
+    const emailStatus = getEmailTransportStatus();
+    if (!emailStatus.ready) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: `Email service is not configured: ${emailStatus.reason}` },
+        { status: 503 }
       );
     }
 
