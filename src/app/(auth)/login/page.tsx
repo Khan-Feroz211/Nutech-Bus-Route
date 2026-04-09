@@ -19,6 +19,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered') === 'true';
+  const verified = searchParams.get('verified') === 'true';
 
   const [role, setRole] = useState<UserRole>('student');
   const [identifier, setIdentifier] = useState('');
@@ -80,6 +81,12 @@ function LoginForm() {
           </div>
         )}
 
+        {verified && (
+          <div className="mb-4 px-4 py-3 bg-emerald-500/20 border border-emerald-400/40 rounded-xl text-white text-sm text-center">
+            Email verified successfully. You can now sign in.
+          </div>
+        )}
+
         <div className="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-6 animate-fade-up">
           <h2 className="text-xl font-bold text-gray-900 mb-5">Sign In</h2>
 
@@ -137,13 +144,9 @@ function LoginForm() {
             </div>
           </form>
 
-          <div className="mt-5 p-3 bg-gray-50 rounded-xl">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Demo Credentials</p>
-            <div className="space-y-1 text-xs text-gray-600">
-              <p>Student: <span className="font-mono">NUTECH-2023-001</span> / <span className="font-mono">student123</span></p>
-              <p>Driver: <span className="font-mono">DRV-001</span> / <span className="font-mono">1234</span></p>
-              <p>Admin: <span className="font-mono">admin@nutech.edu.pk</span> / <span className="font-mono">admin123</span></p>
-            </div>
+          <div className="mt-5 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1">Security First</p>
+            <p className="text-xs text-blue-700/80">Accounts require verified email OTP and are protected by login rate limiting.</p>
           </div>
         </div>
 

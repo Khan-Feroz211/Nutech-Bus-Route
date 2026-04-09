@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { enforceRegistrationRateLimit } from '@/lib/accountService';
+import { createEmailVerificationOtp, enforceRegistrationRateLimit } from '@/lib/accountService';
+import { sendEmailVerificationOtp } from '@/lib/email';
 import { validateEmailStructure, analyzePasswordStrength } from '@/lib/passwordSecurity';
 import type { ApiResponse } from '@/types';
 
@@ -43,6 +44,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // SECURITY: Email validation before rate limiting
     const normalizedEmail = email?.trim().toLowerCase() || undefined;
+    if (!normalizedEmail) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Email is required for account verification.',
+      }, { status: 400 });
+    }
+
     if (normalizedEmail) {
       const emailValidation = validateEmailStructure(normalizedEmail);
       if (!emailValidation.valid) {
@@ -86,14 +94,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }, { status: 409 });
     }
 
-    if (normalizedEmail) {
-      const existingEmail = await prisma.user.findFirst({ where: { email: normalizedEmail, role: 'student' } });
-      if (existingEmail) {
-        return NextResponse.json<ApiResponse>({
-          success: false,
-          error: 'This email is already registered.',
-        }, { status: 409 });
-      }
+    const existingEmail = await prisma.user.findFirst({ where: { email: normalizedEmail, role: 'student' } });
+    if (existingEmail) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'This email is already registered.',
+      }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password.trim(), 12);
@@ -103,6 +109,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         name: name.trim(),
         rollNumber: rollNumber.trim(),
         email: normalizedEmail,
+        isEmailVerified: false,
         phoneNumber: phoneNumber?.trim(),
         assignedRouteId: routeId,
         role: 'student',
@@ -110,10 +117,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
     });
 
+    const otpResult = await createEmailVerificationOtp({ email: normalizedEmail });
+    if (otpResult.email && otpResult.name && otpResult.otp) {
+      await sendEmailVerificationOtp({
+        to: otpResult.email,
+        name: otpResult.name,
+        otp: otpResult.otp,
+      });
+    }
+
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: { id: newUser.id },
-      message: 'Registration successful.',
+      data: { id: newUser.id, email: normalizedEmail, verificationRequired: true },
+      message: 'Registration successful. Please verify your email with OTP.',
     }, { status: 201 });
   } catch {
     return NextResponse.json<ApiResponse>({

@@ -53,10 +53,46 @@ export function useNotifications(routeId?: string) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, read: true }),
+    }).catch(() => {
+      // Keep optimistic update in UI; backend sync can retry on next reload.
+    });
   }, []);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ markAll: true }),
+    }).catch(() => {
+      // Keep optimistic update in UI; backend sync can retry on next reload.
+    });
+  }, []);
+
+  const deleteNotification = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    fetch(`/api/notifications?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }).catch(() => {
+      // Keep optimistic update in UI; backend sync can retry on next reload.
+    });
+  }, []);
+
+  const clearAllNotifications = useCallback(() => {
+    setNotifications([]);
+
+    fetch('/api/notifications?all=true', {
+      method: 'DELETE',
+    }).catch(() => {
+      // Keep optimistic update in UI; backend sync can retry on next reload.
+    });
   }, []);
 
   const addNotification = useCallback((notif: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
@@ -69,5 +105,14 @@ export function useNotifications(routeId?: string) {
     setNotifications((prev) => [newNotif, ...prev]);
   }, []);
 
-  return { notifications, loading, unreadCount, markAsRead, markAllAsRead, addNotification };
+  return {
+    notifications,
+    loading,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAllNotifications,
+    addNotification,
+  };
 }

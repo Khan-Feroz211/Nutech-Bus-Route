@@ -49,3 +49,28 @@ export async function sendPasswordResetEmail(input: {
     html: `<p>Hi ${input.name},</p><p>Use the link below to reset your password:</p><p><a href="${input.resetLink}">${input.resetLink}</a></p><p>This link expires in <strong>15 minutes</strong>.</p><p>If you did not request this, you can safely ignore this email.</p>`,
   });
 }
+
+export async function sendEmailVerificationOtp(input: {
+  to: string;
+  name: string;
+  otp: string;
+}): Promise<void> {
+  const from = process.env.SMTP_FROM;
+  const tx = getTransporter();
+
+  if (!tx || !from) {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.log(`[email-verify] Email transport not configured. OTP for ${input.to}: ${input.otp}`);
+    }
+    return;
+  }
+
+  await tx.sendMail({
+    from,
+    to: input.to,
+    subject: 'NUTECH BusTrack Email Verification OTP',
+    text: `Hi ${input.name},\n\nYour email verification OTP is: ${input.otp}\n\nThis OTP expires in 5 minutes.\nIf you did not create this account, please ignore this email.`,
+    html: `<p>Hi ${input.name},</p><p>Your email verification OTP is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">${input.otp}</p><p>This OTP expires in <strong>5 minutes</strong>.</p><p>If you did not create this account, please ignore this email.</p>`,
+  });
+}

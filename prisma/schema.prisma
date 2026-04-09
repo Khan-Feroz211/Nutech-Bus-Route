@@ -16,6 +16,8 @@ model User {
   id              String   @id @default(cuid())
   name            String
   email           String?  @unique
+  isEmailVerified Boolean  @default(false)
+  emailVerifiedAt DateTime?
   passwordHash    String
   role            String   // "student" | "driver" | "admin"
   createdAt       DateTime @default(now())
@@ -37,6 +39,7 @@ model User {
   busPassApps     BusPassApplication[]
   boardingLogs    BoardingLog[]
   passwordResets  PasswordResetToken[]
+  emailOtps       EmailVerificationOtp[]
 }
 
 // ─── Bus Route ────────────────────────────────────────────────────────────────
@@ -180,4 +183,17 @@ model PasswordResetRequest {
   identifier String
   ipAddress  String
   createdAt  DateTime @default(now())
+}
+
+model EmailVerificationOtp {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpHash   String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

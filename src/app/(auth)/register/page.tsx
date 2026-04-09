@@ -51,12 +51,21 @@ export default function RegisterPage() {
       });
 
       const text = await res.text();
-      const data = (text ? JSON.parse(text) : {}) as { success?: boolean; error?: string };
+      const data = (text ? JSON.parse(text) : {}) as {
+        success?: boolean;
+        error?: string;
+        data?: { email?: string; verificationRequired?: boolean };
+      };
 
       if (!res.ok || !data.success) {
         setError(data.error ?? `Registration failed (HTTP ${res.status}).`);
       } else {
-        router.push('/login?registered=true');
+        const verifiedEmail = data.data?.email ?? form.email.trim().toLowerCase();
+        if (data.data?.verificationRequired) {
+          router.push(`/verify-email?email=${encodeURIComponent(verifiedEmail)}`);
+        } else {
+          router.push('/login?registered=true');
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');

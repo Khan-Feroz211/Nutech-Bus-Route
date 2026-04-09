@@ -12,7 +12,15 @@ export default function NotificationsPage() {
   const { data: session } = useSession();
   const assignedRouteId = (session?.user as Record<string, unknown>)?.assignedRouteId as string ?? 'route-a';
 
-  const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useNotifications(assignedRouteId);
+  const {
+    notifications,
+    loading,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAllNotifications,
+  } = useNotifications(assignedRouteId);
 
   const [prefs, setPrefs] = useState<NotificationPreferences>({
     busArrival: true,
@@ -35,18 +43,25 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <Button variant="outline" size="sm" onClick={markAllAsRead}>
-            Mark all read
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <Button variant="outline" size="sm" onClick={markAllAsRead}>
+              Mark all read
+            </Button>
+          )}
+          {notifications.length > 0 && (
+            <Button variant="outline" size="sm" onClick={clearAllNotifications}>
+              Clear all
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Notification list */}
@@ -68,8 +83,7 @@ export default function NotificationsPage() {
             return (
               <div
                 key={notif.id}
-                onClick={() => markAsRead(notif.id)}
-                className={`flex gap-3 p-3.5 rounded-xl border cursor-pointer transition-opacity ${cfg.color} ${
+                className={`flex gap-3 p-3.5 rounded-xl border transition-all duration-200 hover:shadow-sm ${cfg.color} ${
                   notif.read ? 'opacity-70' : ''
                 }`}
               >
@@ -85,6 +99,22 @@ export default function NotificationsPage() {
                   </div>
                   <p className="text-sm text-gray-600 mt-0.5">{notif.message}</p>
                   <p className="text-xs text-gray-400 mt-1">{formatTime(notif.createdAt)}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    {!notif.read && (
+                      <button
+                        onClick={() => markAsRead(notif.id)}
+                        className="text-xs text-nutech-blue hover:underline"
+                      >
+                        Mark as read
+                      </button>
+                    )}
+                    <button
+                      onClick={() => deleteNotification(notif.id)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             );

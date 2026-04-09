@@ -10,7 +10,14 @@ interface NotificationBellProps {
 
 export default function NotificationBell({ light }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAllNotifications,
+  } = useNotifications();
 
   const textColor = light ? 'text-white' : 'text-gray-700';
 
@@ -38,14 +45,24 @@ export default function NotificationBell({ light }: NotificationBellProps) {
           <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
               <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  className="text-xs text-nutech-blue hover:underline"
-                >
-                  Mark all read
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-xs text-nutech-blue hover:underline"
+                  >
+                    Mark all read
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={clearAllNotifications}
+                    className="text-xs text-red-600 hover:underline"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="max-h-80 overflow-y-auto">
@@ -53,9 +70,8 @@ export default function NotificationBell({ light }: NotificationBellProps) {
                 <p className="text-sm text-gray-500 text-center py-6">No notifications</p>
               ) : (
                 notifications.slice(0, 6).map((notif) => (
-                  <button
+                  <div
                     key={notif.id}
-                    onClick={() => markAsRead(notif.id)}
                     className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
                       !notif.read ? 'bg-blue-50/50' : ''
                     }`}
@@ -70,12 +86,28 @@ export default function NotificationBell({ light }: NotificationBellProps) {
                         <p className="text-xs text-gray-400 mt-0.5">
                           {formatTime(notif.createdAt)}
                         </p>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          {!notif.read && (
+                            <button
+                              onClick={() => markAsRead(notif.id)}
+                              className="text-[11px] text-nutech-blue hover:underline"
+                            >
+                              Mark as read
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteNotification(notif.id)}
+                            className="text-[11px] text-red-600 hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                       {!notif.read && (
                         <span className="w-2 h-2 rounded-full bg-nutech-blue flex-shrink-0 mt-1" />
                       )}
                     </div>
-                  </button>
+                  </div>
                 ))
               )}
             </div>

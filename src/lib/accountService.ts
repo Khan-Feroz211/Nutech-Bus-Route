@@ -4,6 +4,7 @@ import { mockStudents } from '@/lib/db';
 import { prisma } from '@/lib/prisma';
 
 const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
+const EMAIL_OTP_TTL_MS = 5 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_PER_IP = 10;
 const RATE_LIMIT_MAX_PER_IDENTIFIER = 5;
@@ -40,6 +41,8 @@ export async function ensureStudentSeedData(): Promise<void> {
           role: 'student',
           rollNumber: student.rollNumber,
           email: student.email,
+          isEmailVerified: true,
+          emailVerifiedAt: new Date(),
           phoneNumber: student.phoneNumber,
           assignedRouteId: student.assignedRouteId,
           passwordHash,
@@ -174,6 +177,11 @@ export async function applyPasswordReset(input: { token: string; password: strin
 const loginAttempts = new Map<string, RateWindow>();
 const loginAttemptsPerIdentifier = new Map<string, RateWindow>();
 
+const otpSendByIp = new Map<string, RateWindow>();
+const otpSendByEmail = new Map<string, RateWindow>();
+const otpVerifyByIp = new Map<string, RateWindow>();
+const otpVerifyByEmail = new Map<string, RateWindow>();
+
 export function enforceLoginRateLimit(identifier: string, ipAddress: string): { allowed: boolean; retryAfterSeconds?: number } {
   const now = Date.now();
   const normalizedIdentifier = normalize(identifier);
@@ -215,6 +223,12 @@ export function enforceLoginRateLimit(identifier: string, ipAddress: string): { 
   if (!byIp.allowed) return byIp;
 
   return enforceWindow(normalizedIdentifier, RATE_LIMIT_MAX_PER_IDENTIFIER, loginAttemptsPerIdentifier);
+}
+
+export function clearLoginRateLimit(identifier: string, ipAddress: string): void {
+  const normalizedIdentifier = normalize(identifier);
+  loginAttempts.delete(ipAddress || 'unknown');
+  loginAttemptsPerIdentifier.delete(normalizedIdentifier);
 }
 
 /**
@@ -274,4 +288,156 @@ export function enforceRegistrationRateLimit(email: string, ipAddress: string): 
   if (!byIp.allowed) return byIp;
 
   return enforceWindow(normalizedEmail, maxPerEmail, registrationPerEmail);
+}
+
+function enforceRateWindow(
+  key: string,
+  max: number,
+  now: number,
+  store: Map<string, RateWindow>
+): { allowed: boolean; retryAfterSeconds?: number } {
+  const current = store.get(key);
+  if (!current || current.resetAt <= now) {
+    store.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true };
+  }
+
+  if (current.count >= max) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+    };
+  }
+
+  current.count += 1;
+  store.set(key, current);
+  return { allowed: true };
+}
+
+function cleanupRateStore(now: number, store: Map<string, RateWindow>): void {
+  if (store.size <= RATE_LIMIT_MAX_KEYS) return;
+  for (const [key, value] of store) {
+    if (value.resetAt <= now) store.delete(key);
+  }
+}
+
+function generateOtpCode(): string {
+  const raw = randomBytes(4).readUInt32BE(0) % 1000000;
+  return String(raw).padStart(6, '0');
+}
+
+export function enforceOtpSendRateLimit(email: string, ipAddress: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const normalizedEmail = normalize(email);
+
+  cleanupRateStore(now, otpSendByIp);
+  cleanupRateStore(now, otpSendByEmail);
+
+  const byIp = enforceRateWindow(ipAddress || 'unknown', 8, now, otpSendByIp);
+  if (!byIp.allowed) return byIp;
+
+  return enforceRateWindow(normalizedEmail, 4, now, otpSendByEmail);
+}
+
+export function enforceOtpVerifyRateLimit(email: string, ipAddress: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const normalizedEmail = normalize(email);
+
+  cleanupRateStore(now, otpVerifyByIp);
+  cleanupRateStore(now, otpVerifyByEmail);
+
+  const byIp = enforceRateWindow(ipAddress || 'unknown', 20, now, otpVerifyByIp);
+  if (!byIp.allowed) return byIp;
+
+  return enforceRateWindow(normalizedEmail, 10, now, otpVerifyByEmail);
+}
+
+export async function createEmailVerificationOtp(input: { email: string }): Promise<{ email?: string; name?: string; otp?: string }> {
+  const normalizedEmail = normalize(input.email);
+  const user = await prisma.user.findFirst({
+    where: { email: normalizedEmail, role: 'student' },
+    select: { id: true, email: true, name: true, isEmailVerified: true },
+  });
+
+  if (!user || !user.email || user.isEmailVerified) {
+    return {};
+  }
+
+  const otp = generateOtpCode();
+  const otpHash = hashToken(otp);
+  const expiresAt = new Date(Date.now() + EMAIL_OTP_TTL_MS);
+  const now = new Date();
+
+  await prisma.$transaction([
+    prisma.emailVerificationOtp.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: now },
+    }),
+    prisma.emailVerificationOtp.create({
+      data: {
+        userId: user.id,
+        otpHash,
+        expiresAt,
+      },
+    }),
+  ]);
+
+  return { email: user.email, name: user.name, otp };
+}
+
+export async function verifyEmailOtp(input: { email: string; otp: string }): Promise<{ success: boolean; error?: string }> {
+  const normalizedEmail = normalize(input.email);
+  const otpHash = hashToken(input.otp.trim());
+  const now = new Date();
+
+  const user = await prisma.user.findFirst({
+    where: { email: normalizedEmail, role: 'student' },
+    select: { id: true, isEmailVerified: true },
+  });
+
+  if (!user) {
+    return { success: false, error: 'Invalid email or OTP.' };
+  }
+
+  if (user.isEmailVerified) {
+    return { success: true };
+  }
+
+  const token = await prisma.emailVerificationOtp.findFirst({
+    where: { userId: user.id, usedAt: null },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!token || token.expiresAt < now) {
+    return { success: false, error: 'OTP has expired. Request a new code.' };
+  }
+
+  if (token.attempts >= 5) {
+    await prisma.emailVerificationOtp.update({
+      where: { id: token.id },
+      data: { usedAt: now },
+    });
+    return { success: false, error: 'Too many invalid attempts. Request a new OTP.' };
+  }
+
+  if (token.otpHash !== otpHash) {
+    await prisma.emailVerificationOtp.update({
+      where: { id: token.id },
+      data: { attempts: { increment: 1 } },
+    });
+    return { success: false, error: 'Invalid email or OTP.' };
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { isEmailVerified: true, emailVerifiedAt: now },
+    }),
+    prisma.emailVerificationOtp.update({
+      where: { id: token.id },
+      data: { usedAt: now },
+    }),
+  ]);
+
+  return { success: true };
 }

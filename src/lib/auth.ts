@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { clearLoginRateLimit, enforceLoginRateLimit } from '@/lib/accountService';
 import type { UserRole } from '@/types';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -13,7 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: 'Password', type: 'password' },
         role: { label: 'Role', type: 'text' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const { identifier, password, role } = credentials as {
           identifier: string;
           password: string;
@@ -21,6 +22,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
 
         if (!identifier || !password || !role) return null;
+
+        const ipAddress = request?.headers?.get('x-forwarded-for')?.split(',')[0]?.trim()
+          || request?.headers?.get('x-real-ip')
+          || 'unknown';
+
+        const rateLimit = enforceLoginRateLimit(identifier, ipAddress);
+        if (!rateLimit.allowed) {
+          return null;
+        }
 
         try {
           if (role === 'student') {
@@ -31,8 +41,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               },
             });
             if (!student) return null;
+            if (student.email && !student.isEmailVerified) return null;
             const valid = await bcrypt.compare(password, student.passwordHash);
             if (!valid) return null;
+            clearLoginRateLimit(identifier, ipAddress);
             return {
               id: student.id,
               name: student.name,
@@ -50,6 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (!driver) return null;
             const valid = await bcrypt.compare(password, driver.passwordHash);
             if (!valid) return null;
+            clearLoginRateLimit(identifier, ipAddress);
             return {
               id: driver.id,
               name: driver.name,
@@ -67,6 +80,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (!admin) return null;
             const valid = await bcrypt.compare(password, admin.passwordHash);
             if (!valid) return null;
+            clearLoginRateLimit(identifier, ipAddress);
             return {
               id: admin.id,
               name: admin.name,
