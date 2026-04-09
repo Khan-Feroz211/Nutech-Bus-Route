@@ -160,3 +160,118 @@ export async function applyPasswordReset(input: { token: string; password: strin
 
   return { success: true };
 }
+
+/**
+ * SECURITY: Rate limiting for login attempts
+ * Prevents brute force attacks on authentication endpoints
+ * 
+ * Limits:
+ * - Max 10 failed attempts per IP per 15-minute window
+ * - Max 5 failed attempts per identifier per 15-minute window
+ * 
+ * Purpose: Limit attacker's ability to guess passwords
+ */
+const loginAttempts = new Map<string, RateWindow>();
+const loginAttemptsPerIdentifier = new Map<string, RateWindow>();
+
+export function enforceLoginRateLimit(identifier: string, ipAddress: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const normalizedIdentifier = normalize(identifier);
+  
+  const enforceWindow = (
+    key: string,
+    max: number,
+    store: Map<string, RateWindow>
+  ): { allowed: boolean; retryAfterSeconds?: number } => {
+    const current = store.get(key);
+    if (!current || current.resetAt <= now) {
+      store.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+      return { allowed: true };
+    }
+
+    if (current.count >= max) {
+      return {
+        allowed: false,
+        retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+      };
+    }
+
+    current.count += 1;
+    store.set(key, current);
+    return { allowed: true };
+  };
+
+  // Opportunistic cleanup
+  if (loginAttempts.size > RATE_LIMIT_MAX_KEYS || loginAttemptsPerIdentifier.size > RATE_LIMIT_MAX_KEYS) {
+    for (const [key, value] of loginAttempts) {
+      if (value.resetAt <= now) loginAttempts.delete(key);
+    }
+    for (const [key, value] of loginAttemptsPerIdentifier) {
+      if (value.resetAt <= now) loginAttemptsPerIdentifier.delete(key);
+    }
+  }
+
+  const byIp = enforceWindow(ipAddress || 'unknown', RATE_LIMIT_MAX_PER_IP, loginAttempts);
+  if (!byIp.allowed) return byIp;
+
+  return enforceWindow(normalizedIdentifier, RATE_LIMIT_MAX_PER_IDENTIFIER, loginAttemptsPerIdentifier);
+}
+
+/**
+ * SECURITY: Rate limiting for account registration/creation
+ * Prevents account enumeration and resource exhaustion attacks
+ * 
+ * Limits:
+ * - Max 5 new accounts per IP per 15-minute window
+ * - Max 3 accounts per email per 15-minute window
+ * 
+ * Purpose: Prevent abuse, spam account creation, and enumeration
+ */
+const registrationAttempts = new Map<string, RateWindow>();
+const registrationPerEmail = new Map<string, RateWindow>();
+
+export function enforceRegistrationRateLimit(email: string, ipAddress: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const normalizedEmail = normalize(email);
+  
+  const maxPerIp = 5; // 5 registrations per IP per window (generous for shared networks)
+  const maxPerEmail = 3; // 3 attempts per email per window (prevent enumeration)
+  
+  const enforceWindow = (
+    key: string,
+    max: number,
+    store: Map<string, RateWindow>
+  ): { allowed: boolean; retryAfterSeconds?: number } => {
+    const current = store.get(key);
+    if (!current || current.resetAt <= now) {
+      store.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+      return { allowed: true };
+    }
+
+    if (current.count >= max) {
+      return {
+        allowed: false,
+        retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+      };
+    }
+
+    current.count += 1;
+    store.set(key, current);
+    return { allowed: true };
+  };
+
+  // Opportunistic cleanup
+  if (registrationAttempts.size > RATE_LIMIT_MAX_KEYS || registrationPerEmail.size > RATE_LIMIT_MAX_KEYS) {
+    for (const [key, value] of registrationAttempts) {
+      if (value.resetAt <= now) registrationAttempts.delete(key);
+    }
+    for (const [key, value] of registrationPerEmail) {
+      if (value.resetAt <= now) registrationPerEmail.delete(key);
+    }
+  }
+
+  const byIp = enforceWindow(ipAddress || 'unknown', maxPerIp, registrationAttempts);
+  if (!byIp.allowed) return byIp;
+
+  return enforceWindow(normalizedEmail, maxPerEmail, registrationPerEmail);
+}

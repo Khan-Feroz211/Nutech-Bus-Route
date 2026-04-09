@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PasswordStrengthIndicator, PasswordRequirements } from '@/components/auth/PasswordStrengthIndicator';
+import { generateSuggestedPassword } from '@/lib/passwordSecurity';
 import { mockRoutes } from '@/lib/db';
 
 export default function RegisterPage() {
@@ -23,6 +25,11 @@ export default function RegisterPage() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  }
+
+  function handleGeneratePassword() {
+    const suggested = generateSuggestedPassword();
+    setForm((f) => ({ ...f, password: suggested, confirmPassword: suggested }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -91,7 +98,37 @@ export default function RegisterPage() {
               </select>
             </div>
 
-            <Input label="Password" type="password" name="password" value={form.password} onChange={handleChange} required />
+            {/* Password Requirements Display */}
+            <PasswordRequirements />
+
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <button
+                  type="button"
+                  onClick={handleGeneratePassword}
+                  className="text-xs text-nutech-blue hover:underline font-medium transition-colors"
+                >
+                  Generate Strong Password
+                </button>
+              </div>
+              <Input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Enter password"
+                required
+              />
+              
+              {/* Real-time password strength indicator */}
+              {form.password && (
+                <div className="mt-3">
+                  <PasswordStrengthIndicator password={form.password} showRequirements={true} />
+                </div>
+              )}
+            </div>
+
             <Input label="Confirm Password" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} required />
 
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
