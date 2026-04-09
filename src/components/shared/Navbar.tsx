@@ -47,9 +47,9 @@ export default function Navbar() {
   return (
     <>
       {/* Desktop top navbar */}
-      <nav className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-nutech-blue via-[#153a73] to-[#1e4a89] z-50 items-center px-6 shadow-md backdrop-blur-sm">
-        <Link href={role === 'admin' ? '/admin' : role === 'driver' ? '/driver' : '/dashboard'} className="flex items-center gap-2 mr-8 transition-transform duration-200 hover:scale-[1.02]">
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow ring-2 ring-white/20">
+      <nav className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-nutech-blue z-50 items-center px-6 shadow-md">
+        <Link href={role === 'admin' ? '/admin' : role === 'driver' ? '/driver' : '/dashboard'} className="flex items-center gap-2 mr-8">
+          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden">
             <Image src="/nutech-logo.png" alt="NUTECH Logo" width={22} height={22} className="object-contain" />
           </div>
           <span className="text-white font-bold text-lg">NUTECH BusTrack</span>
@@ -64,8 +64,8 @@ export default function Navbar() {
                 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 'nav-ink',
                 pathname === item.href
-                  ? 'bg-white text-nutech-blue shadow-sm'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
+                  ? 'bg-white/20 text-white'
+                  : 'text-white/75 hover:text-white hover:bg-white/10'
               )}
             >
               <span className="w-4 h-4">{item.icon}</span>
@@ -94,7 +94,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 z-50 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
         <div className="flex items-center justify-around py-1">
           {navItems.slice(0, 5).map((item) => (
             <Link
@@ -103,7 +103,7 @@ export default function Navbar() {
               className={cn(
                 'flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-all duration-200 min-w-[56px] nav-ink',
                 pathname === item.href
-                  ? 'text-nutech-blue bg-blue-50'
+                  ? 'text-nutech-blue'
                   : 'text-gray-400 hover:text-gray-600'
               )}
             >
@@ -115,7 +115,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-nutech-blue to-[#1e4a89] z-50 flex items-center px-4 shadow-sm">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-nutech-blue z-50 flex items-center px-4 shadow-sm">
         <div className="flex items-center gap-2">
           <Image src="/nutech-logo.png" alt="NUTECH Logo" width={24} height={24} className="object-contain" />
           <span className="text-white font-bold">NUTECH BusTrack</span>

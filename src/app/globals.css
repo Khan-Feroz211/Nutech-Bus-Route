@@ -4,10 +4,9 @@
 
 :root {
   --nutech-blue: #1B3A6B;
-  --nutech-blue-light: #2b5aa0;
+  --nutech-blue-light: #244d89;
   --nutech-green: #22C55E;
   --nutech-cyan: #00C2A8;
-  --nutech-gold: #f59e0b;
   --nutech-slate: #0f172a;
 }
 
@@ -21,10 +20,7 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(900px 500px at 8% 0%, #e5f0ff 0%, rgba(229, 240, 255, 0) 55%),
-    radial-gradient(700px 420px at 100% 100%, #def7f2 0%, rgba(222, 247, 242, 0) 50%),
-    linear-gradient(180deg, #f8fbff 0%, #eef5ff 50%, #ffffff 100%);
+  background: radial-gradient(1200px 600px at 10% 0%, #e9f2ff 0%, #f8fbff 30%, #ffffff 70%);
   color: #0f172a;
 }
 
@@ -44,11 +40,7 @@ body {
 }
 
 .nav-ink {
-  transition: all 200ms ease;
-}
-
-.nav-ink:hover {
-  transform: translateY(-1px);
+  transition: color 180ms ease, background-color 180ms ease;
 }
 
 /* Safe area for mobile bottom nav */

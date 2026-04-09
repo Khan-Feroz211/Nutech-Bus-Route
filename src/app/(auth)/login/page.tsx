@@ -63,9 +63,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-nutech-blue via-[#0E2A54] to-[#0A1E3F] flex items-center justify-center p-4 overflow-hidden">
-      <div className="absolute -top-20 -left-16 w-72 h-72 rounded-full bg-white/10 blur-3xl animate-pulse" />
-      <div className="absolute -bottom-20 -right-16 w-80 h-80 rounded-full bg-[#00C2A8]/20 blur-3xl animate-pulse" />
+    <div className="min-h-screen bg-gradient-to-br from-nutech-blue to-nutech-blue-light flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8 animate-fade-up">
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg ring-4 ring-white/20">
