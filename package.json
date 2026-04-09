@@ -11,9 +11,16 @@
     "db:migrate": "npx prisma migrate dev",
     "db:reset": "npx prisma migrate reset --force && npx tsx prisma/seed.ts",
     "server:dev": "cd server && npm run dev",
-    "server:build": "cd server && npm run build"
+    "server:build": "cd server && npm run build",
+    "mobile:cap:add:android": "npx cap add android",
+    "mobile:cap:sync": "npx cap sync android",
+    "mobile:cap:copy": "npx cap copy android",
+    "mobile:android:open": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
     "@libsql/client": "^0.17.2",
     "@prisma/adapter-libsql": "^7.7.0",
     "@prisma/client": "^7.7.0",

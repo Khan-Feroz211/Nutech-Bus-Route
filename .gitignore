@@ -41,7 +41,6 @@ next-env.d.ts
 # server dist
 /server/dist
 
-<<<<<<< HEAD
 # prisma local database
 /prisma/*.db
 /prisma/*.db-journal
@@ -49,3 +48,10 @@ next-env.d.ts
 /prisma/**/*.db-journal
 
 /src/generated/prisma
+
+# android/capacitor build artifacts
+/android/.gradle/
+/android/.idea/
+/android/local.properties
+/android/app/build/
+/android/build/
