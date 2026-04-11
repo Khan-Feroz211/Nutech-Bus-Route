@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   title: 'NUTECH BusTrack',
   description: 'Real-time bus tracking for NUTECH University, Islamabad',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

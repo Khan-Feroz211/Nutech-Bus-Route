@@ -3,18 +3,19 @@
 Use this checklist in your next session.
 
 ## 1. Email Delivery Finalization (High Priority)
-- [ ] Create `.env.local` with SMTP values:
+- [x] Create `.env.local` with SMTP values:
   - `SMTP_HOST`
   - `SMTP_PORT`
   - `SMTP_USER`
   - `SMTP_PASS`
   - `SMTP_FROM`
-- [ ] Restart app after env changes.
-- [ ] Test registration OTP email delivery.
-- [ ] Test forgot-password email delivery.
-- [ ] Confirm recipient inbox + spam/junk behavior.
+- [x] Restart app after env changes.
+- [x] Test registration OTP email delivery.
+- [x] Test forgot-password email delivery.
+- [ ] Confirm recipient inbox + spam/junk behavior (deferred: complete after custom SMTP is configured).
 
 ## 2. Android Branding (NUTECH Identity)
+- [x] Create web favicon logo with intersecting `NT` monogram.
 - [ ] Replace default Android launcher icons with NUTECH icon set.
 - [ ] Replace splash screen assets in Android resources.
 - [ ] Verify icon quality on mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi.
@@ -30,8 +31,8 @@ Use this checklist in your next session.
 ## 4. Mobile Runtime Configuration
 - [ ] Set `CAP_SERVER_URL` to production domain.
 - [ ] Run `npm run mobile:cap:sync`.
-- [ ] Open Android Studio project and run on physical device.
-- [ ] Verify auth, OTP, notifications, and profile navigation on mobile.
+- [ ] Open Android Studio project and run on physical device (deferred for now: pending full Android toolchain setup).
+- [ ] Verify auth, OTP, notifications, and profile navigation on mobile (deferred until Android runtime setup is resumed).
 
 ## 5. Product Readiness Checks
 - [ ] Remove/confirm any demo-only UI text is not exposed.

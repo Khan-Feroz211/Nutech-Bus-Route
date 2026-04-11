@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:https": "next dev --experimental-https -H 0.0.0.0 -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -15,7 +16,12 @@
     "mobile:cap:add:android": "npx cap add android",
     "mobile:cap:sync": "npx cap sync android",
     "mobile:cap:copy": "npx cap copy android",
-    "mobile:android:open": "npx cap open android"
+    "mobile:android:open": "npx cap open android",
+    "mobile:android:live": "npx cap run android -l --host=0.0.0.0 --port=3000 --forwardPorts 3000:3000",
+    "mobile:android:live:sync": "npm run mobile:cap:sync && npx cap run android -l --host=0.0.0.0 --port=3000 --forwardPorts 3000:3000",
+    "mobile:android:live:https": "npx cap run android -l --https --host=0.0.0.0 --port=3000 --forwardPorts 3000:3000",
+    "mobile:android:live:sync:https": "npm run mobile:cap:sync && npx cap run android -l --https --host=0.0.0.0 --port=3000 --forwardPorts 3000:3000",
+    "mobile:android:logs": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$adb = (Get-Command adb -ErrorAction SilentlyContinue).Source; if (-not $adb) { $sdkAdb = Join-Path $env:LOCALAPPDATA 'Android\\Sdk\\platform-tools\\adb.exe'; if (Test-Path $sdkAdb) { $adb = $sdkAdb } }; if (-not $adb) { Write-Host 'ADB not found. Install Android platform-tools or add adb to PATH.'; exit 1 }; & $adb logcat\""
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
