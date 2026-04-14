@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse } from '@/types';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const studentId = searchParams.get('studentId');
     const status = searchParams.get('status');
+
+    if (authz.user.role === 'student') {
+      if (!studentId || studentId !== authz.user.id) {
+        return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+    }
 
     const apps = await prisma.busPassApplication.findMany({
       where: {
@@ -28,6 +38,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as {
       studentId: string;
@@ -38,6 +51,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (!body.studentId || !body.routeId || !body.semester) {
       return NextResponse.json<ApiResponse>({ success: false, error: 'studentId, routeId, and semester are required.' }, { status: 400 });
+    }
+
+    if (authz.user.role === 'student' && body.studentId !== authz.user.id) {
+      return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
     // Check if student already has a pending/approved pass for this semester
@@ -71,6 +88,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as {
       id: string;

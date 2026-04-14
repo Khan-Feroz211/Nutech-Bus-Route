@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse, Report } from '@/types';
 
 export async function GET(): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const reports = await prisma.report.findMany({
       include: { student: { select: { name: true, rollNumber: true } } },
@@ -15,8 +19,15 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as { type: string; description: string; studentId: string; busId?: string; routeId?: string };
+
+    if (body.studentId !== authz.user.id) {
+      return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
 
     const newReport = await prisma.report.create({
       data: {
@@ -36,6 +47,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as { id: string; status: 'pending' | 'resolved' | 'dismissed' };
     const updated = await prisma.report.update({

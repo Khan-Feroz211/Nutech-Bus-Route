@@ -35,9 +35,9 @@ Use this checklist in your next session.
 - [ ] Verify auth, OTP, notifications, and profile navigation on mobile (deferred until Android runtime setup is resumed).
 
 ## 5. Product Readiness Checks
-- [ ] Remove/confirm any demo-only UI text is not exposed.
+- [x] Remove/confirm any demo-only UI text is not exposed.
 - [ ] Verify OTP rate limits and retry messaging.
-- [ ] Verify notification actions: mark read, delete, clear all.
+- [x] Verify notification actions: mark read, delete, clear all.
 - [ ] Confirm role-based routes behave correctly (student/driver/admin).
 
 ## 6. Deployment & Security Hardening

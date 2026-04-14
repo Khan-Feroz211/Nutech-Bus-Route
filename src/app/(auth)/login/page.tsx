@@ -28,9 +28,9 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   const placeholders: Record<UserRole, string> = {
-    student: 'NUTECH-2023-001',
-    driver: 'DRV-001',
-    admin: 'admin@nutech.edu.pk',
+    student: 'Enter your roll number',
+    driver: 'Enter your employee ID',
+    admin: 'Enter your official email',
   };
 
   const passwordLabels: Record<UserRole, string> = {
@@ -101,6 +101,7 @@ function LoginForm() {
               >
                 <span className="text-xl">{r.icon}</span>
                 <span className="text-xs font-semibold">{r.label}</span>
+                <span className="text-[10px] leading-4 text-center opacity-80">{r.desc}</span>
               </button>
             ))}
           </div>

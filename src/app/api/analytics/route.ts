@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse } from '@/types';
 
 export async function GET(): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());

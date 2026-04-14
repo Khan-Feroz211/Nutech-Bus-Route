@@ -16,6 +16,21 @@ interface Student {
   assignedRouteId?: string;
 }
 
+function getRouteDotClass(routeId?: string): string {
+  switch (routeId) {
+    case 'route-a':
+      return 'bg-blue-500';
+    case 'route-b':
+      return 'bg-green-500';
+    case 'route-c':
+      return 'bg-orange-500';
+    case 'route-d':
+      return 'bg-purple-500';
+    default:
+      return 'bg-gray-400';
+  }
+}
+
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [total, setTotal] = useState(0);
@@ -27,7 +42,7 @@ export default function AdminStudentsPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   // Add/edit form state
-  const [form, setForm] = useState({ name: '', rollNumber: '', email: '', phoneNumber: '', address: '', assignedRouteId: 'route-a', password: 'student123' });
+  const [form, setForm] = useState({ name: '', rollNumber: '', email: '', phoneNumber: '', address: '', assignedRouteId: 'route-a', password: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -49,7 +64,7 @@ export default function AdminStudentsPage() {
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
   function openAdd() {
-    setForm({ name: '', rollNumber: '', email: '', phoneNumber: '', address: '', assignedRouteId: 'route-a', password: 'student123' });
+    setForm({ name: '', rollNumber: '', email: '', phoneNumber: '', address: '', assignedRouteId: 'route-a', password: '' });
     setEditStudent(null);
     setShowAdd(true);
     setError('');
@@ -65,6 +80,11 @@ export default function AdminStudentsPage() {
   async function handleSave() {
     if (!form.name || !form.rollNumber || !form.assignedRouteId) {
       setError('Name, roll number, and route are required.');
+      return;
+    }
+
+    if (!editStudent && !form.password.trim()) {
+      setError('An initial password is required when adding a student.');
       return;
     }
     setSaving(true);
@@ -115,6 +135,8 @@ export default function AdminStudentsPage() {
           />
         </div>
         <select
+          aria-label="Filter by route"
+          title="Filter by route"
           value={routeFilter}
           onChange={(e) => setRouteFilter(e.target.value)}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-nutech-blue"
@@ -140,6 +162,8 @@ export default function AdminStudentsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Route *</label>
               <select
+                aria-label="Assigned route"
+                title="Assigned route"
                 value={form.assignedRouteId}
                 onChange={(e) => setForm((f) => ({ ...f, assignedRouteId: e.target.value }))}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-nutech-blue"
@@ -150,7 +174,13 @@ export default function AdminStudentsPage() {
               </select>
             </div>
             {!editStudent && (
-              <Input label="Initial Password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+              <Input
+                label="Initial Password *"
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                placeholder="Set a temporary password"
+              />
             )}
           </div>
           <div className="flex gap-2 mt-4">
@@ -194,7 +224,7 @@ export default function AdminStudentsPage() {
                       <td className="py-3 pr-4">
                         {route && (
                           <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: route.color }} />
+                            <span className={`w-2.5 h-2.5 rounded-full ${getRouteDotClass(route.id)}`} />
                             <span className="text-gray-700">{route.label}</span>
                           </div>
                         )}

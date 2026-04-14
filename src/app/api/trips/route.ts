@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse } from '@/types';
 
 export async function GET(): Promise<NextResponse> {
+  const authz = await requireApiAuth(['driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
+    const where = authz.user.role === 'driver'
+      ? { driverId: authz.user.id }
+      : undefined;
+
     const trips = await prisma.trip.findMany({
+      where,
       orderBy: { startTime: 'desc' },
       take: 100,
     });
@@ -15,8 +24,15 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as { busId: string; driverId: string; routeId: string; event: 'start' | 'end'; direction?: string };
+
+    if (authz.user.role === 'driver' && body.driverId !== authz.user.id) {
+      return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
 
     if (body.event === 'start') {
       const hour = new Date().getHours();

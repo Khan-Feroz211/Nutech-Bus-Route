@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { mockBuses } from '@/lib/db';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse } from '@/types';
 
 export async function GET(): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const buses = await prisma.bus.findMany({ orderBy: { createdAt: 'asc' } });
     return NextResponse.json<ApiResponse>({ success: true, data: buses });
@@ -14,6 +18,9 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as {
       plateNumber: string;
@@ -45,6 +52,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as { id: string; status?: string; routeId?: string; driverId?: string; model?: string; capacity?: number };
     const { id, ...data } = body;
@@ -61,6 +71,9 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const { id } = await req.json() as { id: string };
     await prisma.bus.delete({ where: { id } });

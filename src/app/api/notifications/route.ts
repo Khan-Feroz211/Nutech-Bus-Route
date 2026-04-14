@@ -1,10 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse } from '@/types';
 
 export async function GET(): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
-    const dbs = await prisma.notification.findMany({ orderBy: { createdAt: 'desc' } });
+    const where = authz.user.role === 'admin'
+      ? undefined
+      : {
+          AND: [
+            {
+              OR: [
+                { targetRole: null },
+                { targetRole: 'all' },
+                { targetRole: authz.user.role },
+              ],
+            },
+            authz.user.role === 'student' && authz.user.assignedRouteId
+              ? {
+                  OR: [
+                    { routeId: null },
+                    { routeId: authz.user.assignedRouteId },
+                  ],
+                }
+              : {},
+          ],
+        };
+
+    const dbs = await prisma.notification.findMany({ where, orderBy: { createdAt: 'desc' } });
     return NextResponse.json<ApiResponse>({ success: true, data: dbs });
   } catch {
     return NextResponse.json<ApiResponse>({ success: false, error: 'DB error' }, { status: 500 });
@@ -12,6 +38,9 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as { title: string; message: string; type: string; targetRole?: string; routeId?: string };
 
@@ -33,10 +62,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as { id?: string; read?: boolean; markAll?: boolean };
 
     if (body.markAll) {
+      if (authz.user.role !== 'admin') {
+        return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
       await prisma.notification.updateMany({ data: { read: true } });
       return NextResponse.json<ApiResponse>({ success: true, message: 'All notifications marked as read.' });
     }
@@ -57,12 +92,18 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     const all = searchParams.get('all');
 
     if (all === 'true') {
+      if (authz.user.role !== 'admin') {
+        return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
       await prisma.notification.deleteMany({});
       return NextResponse.json<ApiResponse>({ success: true, message: 'All notifications cleared.' });
     }

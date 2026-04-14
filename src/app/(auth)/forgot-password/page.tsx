@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
         <form onSubmit={handleRequestToken} className="space-y-3">
           <Input
             label="Roll Number or Email"
-            placeholder="NUTECH-2023-001 or student@nutech.edu.pk"
+            placeholder="Enter your roll number or official email"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             required

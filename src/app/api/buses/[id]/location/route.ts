@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockBuses } from '@/lib/db';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse, LatLng } from '@/types';
 
 // In-memory location store (demo only – lost on restart; use a real DB in production)
@@ -9,6 +10,9 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   const { id } = await params;
   const bus = mockBuses.find((b) => b.id === id);
   if (!bus) {
@@ -30,8 +34,16 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
+  const authz = await requireApiAuth(['driver', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const { id } = await params;
+
+    if (authz.user.role === 'driver' && authz.user.assignedBusId && authz.user.assignedBusId !== id) {
+      return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await req.json() as { location: LatLng; speed?: number; heading?: number };
     locationStore.set(id, { ...body, timestamp: Date.now() });
 

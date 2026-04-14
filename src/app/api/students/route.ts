@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { requireApiAuth } from '@/lib/apiAuth';
 import type { ApiResponse } from '@/types';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') ?? '';
@@ -41,6 +45,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as {
       name: string;
@@ -56,12 +63,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json<ApiResponse>({ success: false, error: 'Name, roll number, and route are required.' }, { status: 400 });
     }
 
+    if (!body.password || !body.password.trim()) {
+      return NextResponse.json<ApiResponse>({ success: false, error: 'Password is required for new student accounts.' }, { status: 400 });
+    }
+
     const existing = await prisma.user.findFirst({ where: { rollNumber: body.rollNumber } });
     if (existing) {
       return NextResponse.json<ApiResponse>({ success: false, error: 'Roll number already registered.' }, { status: 409 });
     }
 
-    const passwordHash = await bcrypt.hash(body.password ?? 'student123', 10);
+    const passwordHash = await bcrypt.hash(body.password, 10);
 
     const student = await prisma.user.create({
       data: {
@@ -83,6 +94,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['student', 'admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const body = await req.json() as {
       id: string;
@@ -94,6 +108,27 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     };
 
     const { id, ...data } = body;
+
+    if (authz.user.role === 'student') {
+      if (id !== authz.user.id) {
+        return NextResponse.json<ApiResponse>({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+
+      // Students can only update their own contact details.
+      const safeData = {
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+      };
+
+      const updated = await prisma.user.update({
+        where: { id },
+        data: safeData,
+        select: { id: true, name: true, email: true, rollNumber: true, assignedRouteId: true, phoneNumber: true, address: true },
+      });
+
+      return NextResponse.json<ApiResponse>({ success: true, data: updated });
+    }
+
     const updated = await prisma.user.update({
       where: { id },
       data,
@@ -107,6 +142,9 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  const authz = await requireApiAuth(['admin']);
+  if (!authz.ok) return authz.response;
+
   try {
     const { id } = await req.json() as { id: string };
 

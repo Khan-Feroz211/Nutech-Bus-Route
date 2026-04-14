@@ -88,7 +88,7 @@ function VerifyEmailForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="student@nutech.edu.pk"
+              placeholder="Enter your email"
               required
             />
             <Input
