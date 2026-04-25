@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">NUTECH BusTrack</string>
-    <string name="title_activity_main">NUTECH BusTrack</string>
-    <string name="package_name">pk.edu.nutech.bustrack</string>
-    <string name="custom_url_scheme">pk.edu.nutech.bustrack</string>
-</resources>
