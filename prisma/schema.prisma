@@ -28,6 +28,7 @@ model User {
   assignedRouteId String?
   phoneNumber     String?
   address         String?
+  fcmToken        String?  // Firebase Cloud Messaging token for push notifications
 
   // Driver fields
   employeeId      String?  @unique
@@ -44,6 +45,7 @@ model User {
   @@index([role])
   @@index([createdAt])
   @@index([assignedRouteId])
+  @@index([fcmToken])
 }
 
 // ─── Bus Route ────────────────────────────────────────────────────────────────
