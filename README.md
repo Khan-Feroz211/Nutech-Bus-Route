@@ -22,6 +22,7 @@ Real-time bus tracking SaaS platform for **National University of Technology (NU
 
 ## Features
 
+### Core Features
 - 🗺️ **Live Tracking** – Google Maps with animated bus marker (GPS simulation built-in)
 - 👤 **Multi-role Auth** – Student, Driver, and Admin portals (NextAuth.js v5)
 - 🔐 **Secure Student Auth** – Database-backed signup/login with bcrypt-hashed passwords
@@ -29,9 +30,40 @@ Real-time bus tracking SaaS platform for **National University of Technology (NU
 - 📅 **Schedule** – Morning/evening timetables for 4 routes
 - 🔔 **Notifications** – Arrival alerts, delay alerts, admin announcements
 - 📱 **PWA** – Install as mobile app, offline support via Service Worker
+
+### Admin Features
 - 🛡️ **Admin Dashboard** – Fleet overview, route/student management
+- 📊 **Analytics** – Usage statistics, route performance
+- 🚌 **Bus Management** – Add/edit/remove buses, assign drivers
+- 🛣️ **Route Management** – Create routes with stops and schedules
+- 📋 **Bus Pass Applications** – Approve/reject student bus pass requests
+- 📝 **Reports** – View and manage student reports
+
+### Student Features
+- 🚌 **Real-time Bus Tracking** – Live location on map with ETA
+- 📅 **Schedule View** – View bus timings for assigned route
+- 🔔 **Notifications** – Delay alerts, arrival notifications
+- 🎫 **Bus Pass** – Apply for bus pass, track application status
+- 📍 **Report Issues** – Report bus/driver/route problems
+
+### Driver Features
 - 🚗 **Driver Portal** – Start/end trips, browser Geolocation API
+- 📍 **Location Sharing** – Share real-time GPS location
+- 📋 **Trip Management** – Manage daily trips
+
+### Technical Features
 - 🔄 **Real-time** – Socket.io server with GPS simulation
+- 🧪 **Testing Infrastructure** – Vitest with React Testing Library
+- ✅ **Input Validation** – Zod schemas for all API routes
+- ⚡ **Rate Limiting** – Global and auth-specific rate limits
+- 📝 **Structured Logging** – Pino logger with pretty printing
+- 🐛 **Error Monitoring** – Sentry integration ready
+- 🗄️ **Database Indexes** – Optimized queries with proper indexes
+- 🔌 **WebSocket Auth** – JWT authentication for Socket.io
+- 🏥 **Health Checks** – Database and socket status monitoring
+- 🆔 **Request Tracing** – Request ID middleware for debugging
+- 🌐 **API Versioning** – Versioned API endpoints (/api/v1)
+- 🔀 **CORS & Compression** – Dynamic CORS origins, response compression
 
 ## Routes
 
@@ -180,6 +212,7 @@ Real-time bus tracking SaaS platform for **National University of Technology (NU
 | **Frontend** | React | 18.3 | UI Library |
 | **Frontend** | TypeScript | 5.5 | Type Safety |
 | **Frontend** | Tailwind CSS | 3.4 | Styling |
+| **Frontend** | Framer Motion | 11.x | Animations |
 | **Frontend** | Lucide React | 0.400 | Icons |
 | **Auth** | NextAuth.js | 5.0 (beta) | Authentication |
 | **Auth** | bcryptjs | 3.0 | Password Hashing |
@@ -190,6 +223,10 @@ Real-time bus tracking SaaS platform for **National University of Technology (NU
 | **Database** | SQLite | - | Local Development DB |
 | **Email** | Nodemailer | 7.0 | SMTP Email Sending |
 | **Mobile** | Capacitor | 8.3 | PWA/Mobile App |
+| **Testing** | Vitest | 2.x | Unit Testing |
+| **Validation** | Zod | 3.x | Schema Validation |
+| **Logging** | Pino | 9.x | Structured Logging |
+| **Monitoring** | Sentry | 8.x | Error Tracking |
 | **Utilities** | date-fns | 3.6 | Date Manipulation |
 | **Utilities** | clsx | 2.1 | Conditional Classes |
 | **Utilities** | tailwind-merge | 2.4 | Tailwind Class Merging |
@@ -727,13 +764,24 @@ npx prisma studio
 │  │ • Google Maps integration                           │   │
 │  │ • Password recovery with email                       │   │
 │  │ • Mobile PWA with Capacitor                         │   │
+│  │ • Testing infrastructure (Vitest)                   │   │
+│  │ • Input validation (Zod)                            │   │
+│  │ • Rate limiting                                     │   │
+│  │ • Structured logging (Pino)                         │   │
+│  │ • Error monitoring (Sentry)                         │   │
+│  │ • Database indexes                                  │   │
+│  │ • WebSocket JWT authentication                      │   │
+│  │ • Health checks                                     │   │
+│  │ • Request ID middleware                             │   │
+│  │ • API versioning                                    │   │
+│  │ • CORS & compression                                │   │
+│  │ • Animated landing page                             │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 │  🚧 In Progress:                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │ • Push notifications (arrival alerts)               │   │
-│  │ • Route optimization algorithm                      │   │
-│  │ • Admin analytics dashboard                          │   │
+│  │ • Push notifications (FCM)                          │   │
+│  │ • Admin analytics dashboard                         │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 │  📋 Planned:                                                 │
@@ -744,6 +792,8 @@ npx prisma studio
 │  │ • Multi-language support (Urdu/English)             │   │
 │  │ • Attendance tracking integration                   │   │
 │  │ • Bus capacity management                           │   │
+│  │ • Driver performance analytics                      │   │
+│  │ • Route optimization algorithm                      │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
