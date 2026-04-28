@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "NUTECH: Web Dev Server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "NUTECH: Web Dev Server (HTTPS)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev:https"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "NUTECH: Android Live (Sync + Run)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "mobile:android:live:sync"],
+      "problemMatcher": []
+    },
+    {
+      "label": "NUTECH: Android Logs",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "mobile:android:logs"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "NUTECH: Android Live (Sync + Run HTTPS)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "mobile:android:live:sync:https"],
+      "problemMatcher": []
+    },
+    {
+      "label": "NUTECH: Start Mobile Live Dev",
+      "dependsOn": [
+        "NUTECH: Web Dev Server",
+        "NUTECH: Android Live (Sync + Run)",
+        "NUTECH: Android Logs"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "NUTECH: Start Mobile Live Dev (HTTPS Web)",
+      "dependsOn": [
+        "NUTECH: Web Dev Server (HTTPS)",
+        "NUTECH: Android Live (Sync + Run HTTPS)",
+        "NUTECH: Android Logs"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}
