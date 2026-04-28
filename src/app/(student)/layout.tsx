@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import Navbar from '@/components/shared/Navbar';
+import StudentLayoutClient from './StudentLayoutClient';
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -14,10 +14,5 @@ export default async function StudentLayout({ children }: { children: React.Reac
     redirect('/login');
   }
 
-  return (
-    <div>
-      <Navbar />
-      <main className="page-content">{children}</main>
-    </div>
-  );
+  return <StudentLayoutClient>{children}</StudentLayoutClient>;
 }
