@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireApiAuth } from '@/lib/apiAuth';
+import { sendBusPassStatusEmail } from '@/lib/email';
 import type { ApiResponse } from '@/types';
 import { PrismaClient } from '@/generated/prisma/client';
 
@@ -127,6 +128,18 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 
       return updated;
     });
+
+    // Send email notification if status changed
+    if (updates.status && app.student.email) {
+      const route = await prisma.busRoute.findUnique({ where: { id: app.routeId } });
+      await sendBusPassStatusEmail({
+        to: app.student.email,
+        name: app.student.name,
+        status: updates.status,
+        routeName: route?.label,
+        reason: updates.notes,
+      });
+    }
 
     return NextResponse.json<ApiResponse>({ success: true, data: app });
   } catch {

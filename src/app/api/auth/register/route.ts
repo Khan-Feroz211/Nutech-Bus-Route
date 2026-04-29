@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { createEmailVerificationOtp, enforceRegistrationRateLimit } from '@/lib/accountService';
-import { getEmailTransportStatus, sendEmailVerificationOtp } from '@/lib/email';
+import { getEmailTransportStatus, sendEmailVerificationOtp, sendWelcomeEmail } from '@/lib/email';
 import { validateEmailStructure, analyzePasswordStrength } from '@/lib/passwordSecurity';
 import type { ApiResponse } from '@/types';
 
@@ -133,6 +133,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         otp: otpResult.otp,
       });
     }
+
+    // Send welcome email
+    const route = await prisma.busRoute.findUnique({ where: { id: routeId } });
+    await sendWelcomeEmail({
+      to: normalizedEmail,
+      name: name.trim(),
+      role: 'student',
+      routeName: route?.label,
+    });
 
     return NextResponse.json<ApiResponse>({
       success: true,
