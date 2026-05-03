@@ -1,0 +1,162 @@
+erDiagram
+    User ||--o{ Report : "files"
+    User ||--o{ BusPassApplication : "submits"
+    User ||--o{ BoardingLog : "boards"
+    User ||--o{ PasswordResetToken : "has"
+    User ||--o{ EmailVerificationOtp : "has"
+    
+    BusRoute ||--o{ Bus : "has"
+    BusRoute ||--o{ Trip : "includes"
+    BusRoute ||--o{ BoardingLog : "serves"
+    
+    Bus ||--o{ Trip : "makes"
+    Bus ||--o{ BoardingLog : "carries"
+    Bus ||--o{ BusLocation : "tracks"
+    
+    Trip ||--o{ BoardingLog : "records"
+    
+    User {
+        string id PK
+        string name
+        string email UK
+        boolean isEmailVerified
+        datetime emailVerifiedAt
+        string passwordHash
+        string role "student|driver|admin"
+        datetime createdAt
+        datetime updatedAt
+        string rollNumber UK "Student only"
+        string assignedRouteId FK
+        string phoneNumber "Student only"
+        string address "Student only"
+        string fcmToken "Push notifications"
+        string employeeId UK "Driver only"
+        string assignedBusId FK "Driver only"
+        string licenseNumber "Driver only"
+        datetime licenseExpiry "Driver only"
+    }
+    
+    BusRoute {
+        string id PK
+        string name
+        string label
+        string color
+        string area
+        string morningDeparture
+        string eveningDeparture
+        string estimatedDuration
+        string stopsJson "JSON: RouteStop[]"
+        string waypointsJson "JSON: LatLng[]"
+        boolean active
+        datetime createdAt
+    }
+    
+    Bus {
+        string id PK
+        string plateNumber UK
+        string model
+        int capacity
+        string status "idle|active|maintenance"
+        string routeId FK
+        string driverId FK
+        float heading
+        float speed
+        float currentLat "Real-time GPS"
+        float currentLng "Real-time GPS"
+        datetime lastUpdated
+        datetime createdAt
+    }
+    
+    Trip {
+        string id PK
+        string busId FK
+        string driverId FK
+        string routeId FK
+        datetime startTime
+        datetime endTime
+        string status "active|completed|cancelled"
+        string direction "morning|evening"
+        datetime createdAt
+    }
+    
+    BusLocation {
+        string id PK
+        string busId FK
+        float lat
+        float lng
+        float heading
+        float speed
+        datetime timestamp
+    }
+    
+    BoardingLog {
+        string id PK
+        string studentId FK
+        string busId FK
+        string routeId FK
+        string tripId FK
+        datetime boardedAt
+    }
+    
+    BusPassApplication {
+        string id PK
+        string studentId FK
+        string routeId FK
+        string semester "Spring 2025"
+        string status "pending|approved|rejected"
+        string feeStatus "unpaid|paid"
+        float feeAmount
+        datetime appliedAt
+        datetime reviewedAt
+        datetime validFrom
+        datetime validTo
+        string notes
+    }
+    
+    Report {
+        string id PK
+        string studentId FK
+        string busId FK
+        string routeId FK
+        string type "ReportType"
+        string description
+        string status "pending|resolved|dismissed"
+        datetime createdAt
+    }
+    
+    Notification {
+        string id PK
+        string title
+        string message
+        string type "info|warning|delay|arrival|system"
+        string targetRole "all|student|driver|admin"
+        string routeId FK
+        boolean read
+        datetime createdAt
+    }
+    
+    PasswordResetToken {
+        string id PK
+        string tokenHash UK
+        string userId FK
+        datetime expiresAt
+        datetime usedAt
+        datetime createdAt
+    }
+    
+    PasswordResetRequest {
+        string id PK
+        string identifier
+        string ipAddress
+        datetime createdAt
+    }
+    
+    EmailVerificationOtp {
+        string id PK
+        string userId FK
+        string otpHash
+        datetime expiresAt
+        int attempts
+        datetime usedAt
+        datetime createdAt
+    }

@@ -41,6 +41,12 @@ interface AnalyticsData {
   tripsByRoute: Array<{ routeId: string; _count: { id: number } }>;
 }
 
+interface TrendPoint {
+  label: string;
+  trips: number;
+  boardings: number;
+}
+
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export default function AdminAnalyticsPage() {
@@ -82,21 +88,21 @@ export default function AdminAnalyticsPage() {
     { name: 'Paid', value: data.busPass.paidFees, color: '#3B82F6' },
   ];
 
-  const weeklyData = [
-    { day: 'Mon', trips: 24, boardings: 180 },
-    { day: 'Tue', trips: 22, boardings: 165 },
-    { day: 'Wed', trips: 26, boardings: 195 },
-    { day: 'Thu', trips: 20, boardings: 150 },
-    { day: 'Fri', trips: 28, boardings: 210 },
-    { day: 'Sat', trips: 10, boardings: 75 },
-    { day: 'Sun', trips: 0, boardings: 0 },
+  const weeklyData: TrendPoint[] = [
+    { label: 'Mon', trips: 24, boardings: 180 },
+    { label: 'Tue', trips: 22, boardings: 165 },
+    { label: 'Wed', trips: 26, boardings: 195 },
+    { label: 'Thu', trips: 20, boardings: 150 },
+    { label: 'Fri', trips: 28, boardings: 210 },
+    { label: 'Sat', trips: 10, boardings: 75 },
+    { label: 'Sun', trips: 0, boardings: 0 },
   ];
 
-  const monthlyData = [
-    { week: 'Week 1', trips: 85, boardings: 650 },
-    { week: 'Week 2', trips: 92, boardings: 720 },
-    { week: 'Week 3', trips: 78, boardings: 580 },
-    { week: 'Week 4', trips: 95, boardings: 740 },
+  const monthlyData: TrendPoint[] = [
+    { label: 'Week 1', trips: 85, boardings: 650 },
+    { label: 'Week 2', trips: 92, boardings: 720 },
+    { label: 'Week 3', trips: 78, boardings: 580 },
+    { label: 'Week 4', trips: 95, boardings: 740 },
   ];
 
   const statCards = [
@@ -164,7 +170,7 @@ export default function AdminAnalyticsPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey={timeRange === 'week' ? 'day' : 'week'} stroke="#6B7280" fontSize={12} />
+                <XAxis dataKey="label" stroke="#6B7280" fontSize={12} />
                 <YAxis stroke="#6B7280" fontSize={12} />
                 <Tooltip />
                 <Area type="monotone" dataKey="trips" stroke="#3B82F6" fillOpacity={1} fill="url(#colorTrips)" strokeWidth={2} />

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>>
   }
 }
 
-export async function DELETE(_req: NextRequest): Promise<NextResponse<ApiResponse>> {
+export async function DELETE(): Promise<NextResponse<ApiResponse>> {
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });

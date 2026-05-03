@@ -1,17 +1,59 @@
 import admin from 'firebase-admin';
 import { prisma } from './prisma';
+import { createLogger, logDebug, logWarn, logError } from './logger';
+
+const nsLogger = createLogger('notificationService');
+
+function isProbablyValidPrivateKey(value: string): boolean {
+  const normalized = value.replace(/\\n/g, '\n').trim();
+  return (
+    normalized.startsWith('-----BEGIN PRIVATE KEY-----') &&
+    normalized.endsWith('-----END PRIVATE KEY-----') &&
+    !normalized.includes('...') &&
+    !normalized.includes('your_')
+  );
+}
 
 if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  } catch (error) {
-    console.error('Firebase admin initialization error:', error);
+  const pid = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
+
+  // Only initialize Firebase admin if all required service account fields are present.
+  if (pid && clientEmail && privateKeyRaw && isProbablyValidPrivateKey(privateKeyRaw)) {
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: pid,
+          clientEmail,
+          privateKey: privateKeyRaw.replace(/\\n/g, '\n'),
+        }),
+      });
+      nsLogger.info({ message: 'Firebase admin initialized' });
+    } catch (error) {
+      logError(error as Error, { component: 'notificationService', stage: 'initialize' });
+      // If strict mode is enabled, fail fast in non-dev environments
+      const failFast = process.env.FAIL_FAST_ON_MISSING_FIREBASE === 'true';
+      if (failFast && process.env.NODE_ENV !== 'development') {
+        throw error;
+      } else {
+        logDebug('Firebase admin init skipped or failed in dev', { err: String(error) });
+      }
+    }
+  } else {
+    const msg = 'Firebase admin not initialized: missing service account environment variables.';
+    const failFast = process.env.FAIL_FAST_ON_MISSING_FIREBASE === 'true';
+    if (failFast && process.env.NODE_ENV !== 'development') {
+      // In strict mode fail the process so CI/prod surfaces the missing config immediately
+      logError(new Error(msg), { component: 'notificationService', stage: 'validate' });
+      throw new Error(msg);
+    }
+    // Otherwise log a warning and continue (silent for dev to avoid noisy output during local builds)
+    if (process.env.NODE_ENV === 'production') {
+      logWarn(msg, { component: 'notificationService' });
+    } else {
+      logDebug(msg, { component: 'notificationService' });
+    }
   }
 }
 

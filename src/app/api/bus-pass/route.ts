@@ -129,8 +129,8 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       return updated;
     });
 
-    // Send email notification if status changed
-    if (updates.status && app.student.email) {
+    // Send email notification only for final decisions.
+    if ((updates.status === 'approved' || updates.status === 'rejected') && app.student.email) {
       const route = await prisma.busRoute.findUnique({ where: { id: app.routeId } });
       await sendBusPassStatusEmail({
         to: app.student.email,

@@ -1,0 +1,6 @@
+# Railway template variables (add to .gitignore if not present)
+# These files should NOT be committed
+.env.local
+.env.local.sample
+nutech-bus-route-firebase-adminsdk-*.json
+dev.db

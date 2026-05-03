@@ -9,6 +9,7 @@ function getTransporter(): nodemailer.Transporter | null {
   const port = Number(process.env.SMTP_PORT ?? 587);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
+  const allowInsecureTls = process.env.SMTP_ALLOW_INSECURE_TLS === 'true';
 
   if (!host || !user || !pass) {
     return null;
@@ -19,6 +20,7 @@ function getTransporter(): nodemailer.Transporter | null {
     port,
     secure: port === 465,
     auth: { user, pass },
+    ...(allowInsecureTls ? { tls: { rejectUnauthorized: false } } : {}),
   });
 
   return transporter;

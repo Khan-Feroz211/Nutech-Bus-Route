@@ -58,3 +58,6 @@ next-env.d.ts
 /android/local.properties
 /android/app/build/
 /android/build/
+
+# Added by ggshield
+.cache_ggshield
