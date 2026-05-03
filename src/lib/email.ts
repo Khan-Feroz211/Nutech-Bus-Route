@@ -26,20 +26,6 @@ function getTransporter(): nodemailer.Transporter | null {
   return transporter;
 }
 
-export function getEmailTransportStatus(): { ready: boolean; reason?: string } {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM;
-
-  if (!host) return { ready: false, reason: 'SMTP_HOST is missing' };
-  if (!user) return { ready: false, reason: 'SMTP_USER is missing' };
-  if (!pass) return { ready: false, reason: 'SMTP_PASS is missing' };
-  if (!from) return { ready: false, reason: 'SMTP_FROM is missing' };
-
-  return { ready: true };
-}
-
 export async function sendPasswordResetEmail(input: {
   to: string;
   name: string;
