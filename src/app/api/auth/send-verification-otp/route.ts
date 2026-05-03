@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/types';
 import { createEmailVerificationOtp, enforceOtpSendRateLimit } from '@/lib/accountService';
-import { getEmailTransportStatus, sendEmailVerificationOtp } from '@/lib/email';
+import { sendEmailVerificationOtp } from '@/lib/email';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -13,14 +13,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         success: false,
         error: 'Email is required.',
       }, { status: 400 });
-    }
-
-    const emailStatus = getEmailTransportStatus();
-    if (!emailStatus.ready) {
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: `Email service is not configured: ${emailStatus.reason}`,
-      }, { status: 503 });
     }
 
     const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
