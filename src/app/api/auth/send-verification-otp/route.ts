@@ -43,7 +43,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       success: true,
       message: 'If the account exists and is pending verification, an OTP has been sent.',
     });
-  } catch {
+  } catch (error) {
+    console.error('[auth/send-verification-otp] unexpected error:', error);
     return NextResponse.json<ApiResponse>({
       success: false,
       error: 'Internal server error.',

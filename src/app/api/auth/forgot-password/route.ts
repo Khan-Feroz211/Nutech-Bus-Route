@@ -50,7 +50,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
       { status: 200 }
     );
-  } catch {
+  } catch (error) {
+    console.error('[auth/forgot-password] unexpected error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: 'Internal server error.' },
       { status: 500 }

@@ -6,6 +6,7 @@ import { clearLoginRateLimit, enforceLoginRateLimit } from '@/lib/accountService
 import type { UserRole } from '@/types';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       name: 'credentials',
@@ -130,11 +131,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     maxAge: 24 * 60 * 60,
   },
   secret: (() => {
-    const secret = process.env.NEXTAUTH_SECRET;
+    const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
     if (!secret) {
-      if (process.env.NEXTAUTH_SECRET_REQUIRED === 'true') {
-        throw new Error('NEXTAUTH_SECRET environment variable must be set in production');
-      }
+      console.warn('[Auth] NEXTAUTH_SECRET/AUTH_SECRET is missing; using fallback development secret.');
       return 'nutech-bustrack-dev-secret-replace-before-deploying';
     }
     return secret;

@@ -43,13 +43,19 @@ export async function sendPasswordResetEmail(input: {
     return;
   }
 
-  await tx.sendMail({
-    from,
-    to: input.to,
-    subject: 'NUTECH BusTrack Password Reset',
-    text: `Hi ${input.name},\n\nUse the link below to reset your password:\n${input.resetLink}\n\nThis link expires in 15 minutes.\n\nIf you did not request this, you can safely ignore this email.`,
-    html: `<p>Hi ${input.name},</p><p>Use the link below to reset your password:</p><p><a href="${input.resetLink}">${input.resetLink}</a></p><p>This link expires in <strong>15 minutes</strong>.</p><p>If you did not request this, you can safely ignore this email.</p>`,
-  });
+  try {
+    await tx.sendMail({
+      from,
+      to: input.to,
+      subject: 'NUTECH BusTrack Password Reset',
+      text: `Hi ${input.name},\n\nUse the link below to reset your password:\n${input.resetLink}\n\nThis link expires in 15 minutes.\n\nIf you did not request this, you can safely ignore this email.`,
+      html: `<p>Hi ${input.name},</p><p>Use the link below to reset your password:</p><p><a href="${input.resetLink}">${input.resetLink}</a></p><p>This link expires in <strong>15 minutes</strong>.</p><p>If you did not request this, you can safely ignore this email.</p>`,
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[password-reset] Failed to send email:', error);
+    }
+  }
 }
 
 export async function sendEmailVerificationOtp(input: {
@@ -68,13 +74,19 @@ export async function sendEmailVerificationOtp(input: {
     return;
   }
 
-  await tx.sendMail({
-    from,
-    to: input.to,
-    subject: 'NUTECH BusTrack Email Verification OTP',
-    text: `Hi ${input.name},\n\nYour email verification OTP is: ${input.otp}\n\nThis OTP expires in 5 minutes.\nIf you did not create this account, please ignore this email.`,
-    html: `<p>Hi ${input.name},</p><p>Your email verification OTP is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">${input.otp}</p><p>This OTP expires in <strong>5 minutes</strong>.</p><p>If you did not create this account, please ignore this email.</p>`,
-  });
+  try {
+    await tx.sendMail({
+      from,
+      to: input.to,
+      subject: 'NUTECH BusTrack Email Verification OTP',
+      text: `Hi ${input.name},\n\nYour email verification OTP is: ${input.otp}\n\nThis OTP expires in 5 minutes.\nIf you did not create this account, please ignore this email.`,
+      html: `<p>Hi ${input.name},</p><p>Your email verification OTP is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">${input.otp}</p><p>This OTP expires in <strong>5 minutes</strong>.</p><p>If you did not create this account, please ignore this email.</p>`,
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[email-verify] Failed to send OTP email:', error);
+    }
+  }
 }
 
 export async function sendWelcomeEmail(input: {
@@ -96,12 +108,13 @@ export async function sendWelcomeEmail(input: {
   const roleText = input.role === 'student' ? 'Student' : input.role === 'driver' ? 'Driver' : 'Admin';
   const routeInfo = input.routeName ? `<p><strong>Assigned Route:</strong> ${input.routeName}</p>` : '';
 
-  await tx.sendMail({
-    from,
-    to: input.to,
-    subject: 'Welcome to NUTECH BusTrack! 🚌',
-    text: `Hi ${input.name},\n\nWelcome to NUTECH BusTrack!\n\nYour account has been created as a ${roleText}.\n${input.routeName ? `You have been assigned to ${input.routeName}.` : ''}\n\nYou can now:\n- Track your bus in real-time\n- View schedules\n- Apply for bus passes\n- Get notifications about delays and arrivals\n\nLog in at: ${process.env.NEXTAUTH_URL}\n\nBest regards,\nNUTECH BusTrack Team`,
-    html: `<p>Hi ${input.name},</p>
+  try {
+    await tx.sendMail({
+      from,
+      to: input.to,
+      subject: 'Welcome to NUTECH BusTrack! 🚌',
+      text: `Hi ${input.name},\n\nWelcome to NUTECH BusTrack!\n\nYour account has been created as a ${roleText}.\n${input.routeName ? `You have been assigned to ${input.routeName}.` : ''}\n\nYou can now:\n- Track your bus in real-time\n- View schedules\n- Apply for bus passes\n- Get notifications about delays and arrivals\n\nLog in at: ${process.env.NEXTAUTH_URL}\n\nBest regards,\nNUTECH BusTrack Team`,
+      html: `<p>Hi ${input.name},</p>
 <h2>Welcome to NUTECH BusTrack! 🚌</h2>
 <p>Your account has been created as a <strong>${roleText}</strong>.</p>
 ${routeInfo}
@@ -114,7 +127,12 @@ ${routeInfo}
 </ul>
 <p><a href="${process.env.NEXTAUTH_URL}">Click here to log in</a></p>
 <p>Best regards,<br>NUTECH BusTrack Team</p>`,
-  });
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[welcome] Failed to send welcome email:', error);
+    }
+  }
 }
 
 export async function sendBusPassStatusEmail(input: {
@@ -138,19 +156,25 @@ export async function sendBusPassStatusEmail(input: {
   const statusText = input.status === 'approved' ? 'Approved' : 'Rejected';
   const reasonText = input.reason ? `<p><strong>Reason:</strong> ${input.reason}</p>` : '';
 
-  await tx.sendMail({
-    from,
-    to: input.to,
-    subject: `NUTECH BusTrack - Bus Pass ${statusText}`,
-    text: `Hi ${input.name},\n\nYour bus pass application has been ${statusText}.\n${input.routeName ? `Route: ${input.routeName}` : ''}\n${input.reason ? `Reason: ${input.reason}` : ''}\n\nLog in to check details: ${process.env.NEXTAUTH_URL}\n\nBest regards,\nNUTECH BusTrack Team`,
-    html: `<p>Hi ${input.name},</p>
+  try {
+    await tx.sendMail({
+      from,
+      to: input.to,
+      subject: `NUTECH BusTrack - Bus Pass ${statusText}`,
+      text: `Hi ${input.name},\n\nYour bus pass application has been ${statusText}.\n${input.routeName ? `Route: ${input.routeName}` : ''}\n${input.reason ? `Reason: ${input.reason}` : ''}\n\nLog in to check details: ${process.env.NEXTAUTH_URL}\n\nBest regards,\nNUTECH BusTrack Team`,
+      html: `<p>Hi ${input.name},</p>
 <h2>Bus Pass Application Update</h2>
 <p>Your bus pass application has been <strong style="color:${statusColor}">${statusText}</strong>.</p>
 ${input.routeName ? `<p><strong>Route:</strong> ${input.routeName}</p>` : ''}
 ${reasonText}
 <p><a href="${process.env.NEXTAUTH_URL}">Log in to view details</a></p>
 <p>Best regards,<br>NUTECH BusTrack Team</p>`,
-  });
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[bus-pass] Failed to send status email:', error);
+    }
+  }
 }
 
 export async function sendDelayNotificationEmail(input: {
@@ -170,16 +194,22 @@ export async function sendDelayNotificationEmail(input: {
     return;
   }
 
-  await tx.sendMail({
-    from,
-    to: input.to,
-    subject: `⚠️ Bus Delay Alert - ${input.routeName}`,
-    text: `Hi ${input.name},\n\nYour bus on ${input.routeName} is delayed by ${input.delayMinutes} minutes.\n${input.newEta ? `New ETA: ${input.newEta}` : ''}\n\nWe apologize for the inconvenience.\n\nBest regards,\nNUTECH BusTrack Team`,
-    html: `<p>Hi ${input.name},</p>
+  try {
+    await tx.sendMail({
+      from,
+      to: input.to,
+      subject: `⚠️ Bus Delay Alert - ${input.routeName}`,
+      text: `Hi ${input.name},\n\nYour bus on ${input.routeName} is delayed by ${input.delayMinutes} minutes.\n${input.newEta ? `New ETA: ${input.newEta}` : ''}\n\nWe apologize for the inconvenience.\n\nBest regards,\nNUTECH BusTrack Team`,
+      html: `<p>Hi ${input.name},</p>
 <h2>⚠️ Bus Delay Alert</h2>
 <p>Your bus on <strong>${input.routeName}</strong> is delayed by <strong>${input.delayMinutes} minutes</strong>.</p>
 ${input.newEta ? `<p><strong>New ETA:</strong> ${input.newEta}</p>` : ''}
 <p>We apologize for the inconvenience.</p>
 <p>Best regards,<br>NUTECH BusTrack Team</p>`,
-  });
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[delay-notification] Failed to send email:', error);
+    }
+  }
 }

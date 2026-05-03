@@ -140,7 +140,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       data: { id: newUser.id, email: normalizedEmail, verificationRequired: true },
       message: 'Registration successful. Please verify your email with OTP.',
     }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('[auth/register] unexpected error:', error);
     return NextResponse.json<ApiResponse>({
       success: false,
       error: 'Internal server error.',
