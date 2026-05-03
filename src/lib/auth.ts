@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { createHash } from 'crypto';
 import { prisma } from '@/lib/prisma';
+import { ensureUserFcmTokenColumn } from '@/lib/dbSchemaCompat';
 import { clearLoginRateLimit, enforceLoginRateLimit } from '@/lib/accountService';
 import type { UserRole } from '@/types';
 
@@ -25,6 +26,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         role: { label: 'Role', type: 'text' },
       },
       async authorize(credentials, request) {
+        await ensureUserFcmTokenColumn();
+
         const { identifier, password, role } = credentials as {
           identifier: string;
           password: string;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { ensureUserFcmTokenColumn } from '@/lib/dbSchemaCompat';
 import { createEmailVerificationOtp, enforceRegistrationRateLimit } from '@/lib/accountService';
 import { sendEmailVerificationOtp, sendWelcomeEmail } from '@/lib/email';
 import { validateEmailStructure, analyzePasswordStrength } from '@/lib/passwordSecurity';
@@ -20,6 +21,8 @@ import type { ApiResponse } from '@/types';
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
+    await ensureUserFcmTokenColumn();
+
     const body = await req.json() as {
       name: string;
       rollNumber: string;
