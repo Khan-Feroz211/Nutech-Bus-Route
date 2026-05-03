@@ -10,7 +10,7 @@
     "dev": "next dev",
     "dev:https": "next dev --experimental-https -H 0.0.0.0 -p 3000",
     "prebuild": "prisma migrate deploy && prisma generate",
-    "build": "next build && npm run postbuild",
+    "build": "prisma generate && next build && npm run postbuild",
     "postbuild": "cd server && npm install && npm run build && cd ..",
     "start": "next start",
     "lint": "next lint",
