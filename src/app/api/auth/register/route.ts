@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { createEmailVerificationOtp, enforceRegistrationRateLimit } from '@/lib/accountService';
 import { sendEmailVerificationOtp, sendWelcomeEmail } from '@/lib/email';
@@ -141,6 +142,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       message: 'Registration successful. Please verify your email with OTP.',
     }, { status: 201 });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error('[auth/register] prisma error:', { code: error.code, meta: error.meta, message: error.message });
+
+      if (error.code === 'P2002') {
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: 'This roll number or email is already registered.',
+        }, { status: 409 });
+      }
+
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Database error while creating the account. Check Railway logs and DATABASE_URL.',
+      }, { status: 503 });
+    }
+
     console.error('[auth/register] unexpected error:', error);
     return NextResponse.json<ApiResponse>({
       success: false,

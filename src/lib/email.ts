@@ -2,13 +2,27 @@ import nodemailer from 'nodemailer';
 
 let transporter: nodemailer.Transporter | null = null;
 
+function getSmtpFromAddress(): string | undefined {
+  const from = process.env.SMTP_FROM?.trim();
+
+  if (!from) {
+    return undefined;
+  }
+
+  if ((from.startsWith('"') && from.endsWith('"')) || (from.startsWith("'") && from.endsWith("'"))) {
+    return from.slice(1, -1).trim();
+  }
+
+  return from;
+}
+
 function getTransporter(): nodemailer.Transporter | null {
   if (transporter) return transporter;
 
-  const host = process.env.SMTP_HOST;
+  const host = process.env.SMTP_HOST?.trim();
   const port = Number(process.env.SMTP_PORT ?? 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.replace(/\s+/g, '');
   const allowInsecureTls = process.env.SMTP_ALLOW_INSECURE_TLS === 'true';
 
   if (!host || !user || !pass) {
@@ -31,7 +45,7 @@ export async function sendPasswordResetEmail(input: {
   name: string;
   resetLink: string;
 }): Promise<void> {
-  const from = process.env.SMTP_FROM;
+  const from = getSmtpFromAddress();
   const tx = getTransporter();
 
   if (!tx || !from) {
@@ -63,7 +77,7 @@ export async function sendEmailVerificationOtp(input: {
   name: string;
   otp: string;
 }): Promise<void> {
-  const from = process.env.SMTP_FROM;
+  const from = getSmtpFromAddress();
   const tx = getTransporter();
 
   if (!tx || !from) {
@@ -95,7 +109,7 @@ export async function sendWelcomeEmail(input: {
   role: string;
   routeName?: string;
 }): Promise<void> {
-  const from = process.env.SMTP_FROM;
+  const from = getSmtpFromAddress();
   const tx = getTransporter();
 
   if (!tx || !from) {
@@ -142,7 +156,7 @@ export async function sendBusPassStatusEmail(input: {
   routeName?: string;
   reason?: string;
 }): Promise<void> {
-  const from = process.env.SMTP_FROM;
+  const from = getSmtpFromAddress();
   const tx = getTransporter();
 
   if (!tx || !from) {
@@ -184,7 +198,7 @@ export async function sendDelayNotificationEmail(input: {
   delayMinutes: number;
   newEta?: string;
 }): Promise<void> {
-  const from = process.env.SMTP_FROM;
+  const from = getSmtpFromAddress();
   const tx = getTransporter();
 
   if (!tx || !from) {

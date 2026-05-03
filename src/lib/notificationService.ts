@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { prisma } from './prisma';
-import { createLogger, logDebug, logWarn, logError } from './logger';
+import { createLogger, logDebug, logError } from './logger';
 
 const nsLogger = createLogger('notificationService');
 
@@ -48,10 +48,8 @@ if (!admin.apps.length) {
       logError(new Error(msg), { component: 'notificationService', stage: 'validate' });
       throw new Error(msg);
     }
-    // Otherwise log a warning and continue (silent for dev to avoid noisy output during local builds)
-    if (process.env.NODE_ENV === 'production') {
-      logWarn(msg, { component: 'notificationService' });
-    } else {
+    // Otherwise stay quiet in production; push notifications are optional for the demo.
+    if (process.env.NODE_ENV !== 'production') {
       logDebug(msg, { component: 'notificationService' });
     }
   }
@@ -68,7 +66,9 @@ export async function sendPushNotification(
   payload: NotificationPayload
 ): Promise<boolean> {
   if (!admin.apps.length) {
-    console.warn('Firebase not initialized');
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Firebase not initialized');
+    }
     return false;
   }
 

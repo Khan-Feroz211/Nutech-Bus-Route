@@ -1,9 +1,18 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import { createHash } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { clearLoginRateLimit, enforceLoginRateLimit } from '@/lib/accountService';
 import type { UserRole } from '@/types';
+
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (secret) return secret;
+
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? 'nutech-bustrack';
+  return createHash('sha256').update(base).digest('hex');
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -130,12 +139,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
     maxAge: 24 * 60 * 60,
   },
-  secret: (() => {
-    const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
-    if (!secret) {
-      console.warn('[Auth] NEXTAUTH_SECRET/AUTH_SECRET is missing; using fallback development secret.');
-      return 'nutech-bustrack-dev-secret-replace-before-deploying';
-    }
-    return secret;
-  })(),
+  secret: getAuthSecret(),
 });
