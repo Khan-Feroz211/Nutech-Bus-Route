@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { ensureUserFcmTokenColumn } from '@/lib/dbSchemaCompat';
 import { createEmailVerificationOtp, enforceRegistrationRateLimit } from '@/lib/accountService';
 import { sendEmailVerificationOtp, sendWelcomeEmail } from '@/lib/email';
+import { shouldSkipEmailVerification } from '@/lib/featureFlags';
 import { validateEmailStructure, analyzePasswordStrength } from '@/lib/passwordSecurity';
 import type { ApiResponse } from '@/types';
 
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // SECURITY: Email validation before rate limiting
     const normalizedEmail = email?.trim().toLowerCase() || undefined;
-    const skipVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
+    const skipVerification = shouldSkipEmailVerification();
     if (!normalizedEmail) {
       return NextResponse.json<ApiResponse>({
         success: false,
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         name: name.trim(),
         rollNumber: rollNumber.trim(),
         email: normalizedEmail,
-        isEmailVerified: skipVerification ? true : false,
+        isEmailVerified: skipVerification,
         emailVerifiedAt: skipVerification ? new Date() : undefined,
         phoneNumber: phoneNumber?.trim(),
         assignedRouteId: routeId,
@@ -145,7 +146,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: { id: newUser.id, email: normalizedEmail, verificationRequired: !skipVerification ? true : false },
+      data: { id: newUser.id, email: normalizedEmail, verificationRequired: !skipVerification },
       message: skipVerification ? 'Registration successful (demo mode: email verification skipped).' : 'Registration successful. Please verify your email with OTP.',
     }, { status: 201 });
   } catch (error) {

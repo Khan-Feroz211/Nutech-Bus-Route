@@ -1,10 +1,11 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import { prisma } from '@/lib/prisma';
 import { ensureUserFcmTokenColumn } from '@/lib/dbSchemaCompat';
 import { clearLoginRateLimit, enforceLoginRateLimit } from '@/lib/accountService';
+import { shouldSkipEmailVerification } from '@/lib/featureFlags';
 import type { UserRole } from '@/types';
 
 function getAuthSecret(): string {
@@ -54,7 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               },
             });
             if (!student) return null;
-            const skipVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
+            const skipVerification = shouldSkipEmailVerification();
             if (student.email && !student.isEmailVerified && !skipVerification) return null;
             const valid = await bcrypt.compare(password, student.passwordHash);
             if (!valid) return null;
