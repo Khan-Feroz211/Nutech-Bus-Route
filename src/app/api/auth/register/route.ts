@@ -48,6 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // SECURITY: Email validation before rate limiting
     const normalizedEmail = email?.trim().toLowerCase() || undefined;
+    const skipVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
     if (!normalizedEmail) {
       return NextResponse.json<ApiResponse>({
         success: false,
@@ -113,7 +114,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         name: name.trim(),
         rollNumber: rollNumber.trim(),
         email: normalizedEmail,
-        isEmailVerified: false,
+        isEmailVerified: skipVerification ? true : false,
+        emailVerifiedAt: skipVerification ? new Date() : undefined,
         phoneNumber: phoneNumber?.trim(),
         assignedRouteId: routeId,
         role: 'student',
@@ -121,13 +123,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
     });
 
-    const otpResult = await createEmailVerificationOtp({ email: normalizedEmail });
-    if (otpResult.email && otpResult.name && otpResult.otp) {
-      await sendEmailVerificationOtp({
-        to: otpResult.email,
-        name: otpResult.name,
-        otp: otpResult.otp,
-      });
+    if (!skipVerification) {
+      const otpResult = await createEmailVerificationOtp({ email: normalizedEmail });
+      if (otpResult.email && otpResult.name && otpResult.otp) {
+        await sendEmailVerificationOtp({
+          to: otpResult.email,
+          name: otpResult.name,
+          otp: otpResult.otp,
+        });
+      }
     }
 
     // Send welcome email
@@ -141,8 +145,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: { id: newUser.id, email: normalizedEmail, verificationRequired: true },
-      message: 'Registration successful. Please verify your email with OTP.',
+      data: { id: newUser.id, email: normalizedEmail, verificationRequired: !skipVerification ? true : false },
+      message: skipVerification ? 'Registration successful (demo mode: email verification skipped).' : 'Registration successful. Please verify your email with OTP.',
     }, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
