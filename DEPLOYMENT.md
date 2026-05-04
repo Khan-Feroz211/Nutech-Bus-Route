@@ -63,6 +63,7 @@ Copy `.env.example` to `.env.local` and fill in:
 | `JWT_SECRET`                    | Secret for Socket.io JWTs                        |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Maps key with Maps JS API enabled       |
 | `SMTP_HOST`/`SMTP_PORT`/etc.    | SMTP credentials for email notifications (optional) |
+| `SMTP_ALLOW_INSECURE_TLS`       | Optional TLS override for specific SMTP providers  |
 
 ---
 
@@ -84,9 +85,11 @@ Copy `.env.example` to `.env.local` and fill in:
    ```
 
 3. **Next.js App**: Deploy to [Vercel](https://vercel.com)
-   - Connect your GitHub repo
-   - Add all environment variables from `.env.example` in the Vercel dashboard
-   - Set `NEXT_PUBLIC_SOCKET_URL` to your Railway/Render socket server URL
+  - Connect your GitHub repo
+  - Add all environment variables from `.env.example` in the Vercel dashboard
+  - For SMTP, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, and optionally `SMTP_ALLOW_INSECURE_TLS`
+  - If you use Gmail, generate a 16-character App Password after enabling 2FA and paste that into `SMTP_PASS`
+  - Set `NEXT_PUBLIC_SOCKET_URL` to your Railway/Render socket server URL
 
 ### Option B: Docker Compose
 

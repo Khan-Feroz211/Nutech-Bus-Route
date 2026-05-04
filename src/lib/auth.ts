@@ -54,7 +54,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               },
             });
             if (!student) return null;
-            if (student.email && !student.isEmailVerified) return null;
+            const skipVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
+            if (student.email && !student.isEmailVerified && !skipVerification) return null;
             const valid = await bcrypt.compare(password, student.passwordHash);
             if (!valid) return null;
             clearLoginRateLimit(identifier, ipAddress);

@@ -641,6 +641,7 @@ SMTP_PORT=587
 SMTP_USER=your_smtp_username
 SMTP_PASS=your_smtp_password
 SMTP_FROM="NUTECH BusTrack <no-reply@nutech.edu.pk>"
+SMTP_ALLOW_INSECURE_TLS=false
 
 # Socket.io Server URL (the standalone Express server)
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
@@ -694,6 +695,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 │  SMTP_USER=your_email@gmail.com                              │
 │  SMTP_PASS=your_app_password                                 │
 │  SMTP_FROM="NUTECH BusTrack <no-reply@nutech.edu.pk>"       │
+│  SMTP_ALLOW_INSECURE_TLS=false                               │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```

@@ -60,6 +60,7 @@ SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
 SMTP_FROM="NUTECH BusTrack <your_email@nutech.edu.pk>"
+SMTP_ALLOW_INSECURE_TLS=false
 ```
 
 #### App URL
