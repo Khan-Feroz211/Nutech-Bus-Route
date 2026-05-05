@@ -10,6 +10,33 @@ datasource db {
   provider = "sqlite"
 }
 
+// ─── Organization (Multi-Tenancy) ─────────────────────────────────────────────────
+
+model Organization {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique // for subdomains
+  logoUrl         String?
+  primaryColor    String   @default("#1B3A6B")
+  secondaryColor  String   @default("#3B82F6")
+  customDomain    String?  // e.g., bus.company.com
+  plan            String   @default("basic") // "basic" | "pro" | "enterprise"
+  maxUsers        Int      @default(100)
+  maxVehicles     Int      @default(20)
+  features        String   // JSON: feature flags
+  settings        String   // JSON: org-specific settings
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users           User[]
+  buses           Bus[]
+  routes          BusRoute[]
+  trips           Trip[]
+
+  @@index([slug])
+  @@index([plan])
+}
+
 // ─── User (students, drivers, admin) ─────────────────────────────────────────
 
 model User {
@@ -22,6 +49,10 @@ model User {
   role            String   // "student" | "driver" | "admin"
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // Multi-tenancy
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
 
   // Student fields
   rollNumber      String?  @unique
@@ -46,6 +77,7 @@ model User {
   @@index([createdAt])
   @@index([assignedRouteId])
   @@index([fcmToken])
+  @@index([organizationId])
 }
 
 // ─── Bus Route ────────────────────────────────────────────────────────────────
@@ -64,9 +96,15 @@ model BusRoute {
   active            Boolean  @default(true)
   createdAt         DateTime @default(now())
 
+  // Multi-tenancy
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id])
+
   buses             Bus[]
   trips             Trip[]
   boardingLogs      BoardingLog[]
+
+  @@index([organizationId])
 }
 
 // ─── Bus ─────────────────────────────────────────────────────────────────────
@@ -86,6 +124,10 @@ model Bus {
   lastUpdated  DateTime?
   createdAt    DateTime  @default(now())
 
+  // Multi-tenancy
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   route        BusRoute? @relation(fields: [routeId], references: [id])
   trips        Trip[]
   boardingLogs BoardingLog[]
@@ -94,6 +136,7 @@ model Bus {
   @@index([routeId])
   @@index([status])
   @@index([driverId])
+  @@index([organizationId])
 }
 
 // ─── Trip ─────────────────────────────────────────────────────────────────────
@@ -107,7 +150,11 @@ model Trip {
   endTime   DateTime?
   status    String    @default("active") // "active" | "completed" | "cancelled"
   direction String    // "morning" | "evening"
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
+
+  // Multi-tenancy
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   bus          Bus          @relation(fields: [busId], references: [id])
   route        BusRoute     @relation(fields: [routeId], references: [id])
@@ -118,6 +165,7 @@ model Trip {
   @@index([routeId])
   @@index([status])
   @@index([startTime])
+  @@index([organizationId])
 }
 
 // ─── Notification ─────────────────────────────────────────────────────────────
